@@ -1,29 +1,58 @@
+
+--Loading user and entities names and security labels (sec_labels) from the file
 function init_sec_labels ()
 
+print("Initialization of security labels\n")
 local fr = io.open("users.txt","r")
 
+c=0
 for line in fr:lines() do
     for k, v in string.gmatch(line,"(%w+):(%d+)") do
             proxy.global.u[k]=tonumber(v)
     end
+c=c+1
 end
 
 fr:close()
+print("Number of loaded users: "..c.."\n")
 
 local fre= io.open("ent.txt","r")
 
+c=0
+le=false
 for line in fre:lines() do
-    for t,n, v in string.gmatch(line,"(%w+):(%w+):(%d+)") do
-        if t == "DB" then
-            proxy.global.db[n]=tonumber(v)
+le=false
+print(line)
+    
+    -- Loading DB, Table, column names and sec_labels
+    for dbn,tn,cn,v in string.gmatch(line,"(.+):(.+):(.+):(%d+)") do
+        proxy.global.c[cn]={db=dbn,table=tn,label=tonumber(v)}
+        c=c+1
+        le=true
+    end
+
+    if le==false then
+        -- Loading DB,Table names and sec_labels
+        for dbn,tn,v in string.gmatch(line,"(.+):(.+):(%d+)") do
+           proxy.global.t[tn]={db=dbn,label=tonumber(v)}
+           c=c+1
+           le=true
         end
-        if t == "T" then
-            proxy.global.t[n]=tonumber(v)
+    end
+
+    if le==false then
+        -- Loading DB names and sec_labels
+        for dbn,v in string.gmatch(line,"(.+):(%d+)") do
+            proxy.global.db[dbn]=tonumber(v)
+            c=c+1
+            le=true
         end
     end
 end
+
 fre:close()
 
+print("Number of loaded entities: "..c.."\n")
 
 end
 
@@ -40,6 +69,7 @@ if not proxy.global.u then
     proxy.global.u={}
     proxy.global.db={}
     proxy.global.t={}
+    proxy.global.c={}
     init_sec_labels()
     end
 
