@@ -86,16 +86,23 @@ return -1
 end
 
 function ent_sec_label(ent_n)
-        for k,v in pairs(proxy.global.t) do
-           if k == ent_n then
-               return v
-           end
+
+    for k,v in pairs(proxy.global.c) do
+        if k == ent_n then
+            return v
         end
-     for k,v in pairs(proxy.global.db) do
-         if k == ent_n then
-             return v
-         end
-     end
+    end
+    
+    for k,v in pairs(proxy.global.t) do
+        if k == ent_n then
+            return v
+        end
+    end
+    for k,v in pairs(proxy.global.db) do
+        if k == ent_n then
+            return v
+        end
+    end
 
 return -1
 end
