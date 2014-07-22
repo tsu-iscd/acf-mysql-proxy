@@ -45,7 +45,6 @@ print(line)
         for dbn,v in string.gmatch(line,"(.+):(%d+)") do
             proxy.global.db[dbn]=tonumber(v)
             c=c+1
-            le=true
         end
     end
 end
