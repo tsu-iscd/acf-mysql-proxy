@@ -152,7 +152,33 @@ function upd_check_access(tokens,tok)
 
 end
 
+
+-- Check access to delete entry of the table.
 function del_check_access(tokens,tok)
+
+while tok <= #tokens do
+    if tokens[tok]['token_name'] == "TK_SQL_FROM"  then
+        tok = tok +1
+        if tokens[tok]['token_name'] == 'TK_LITERAL' then
+
+            ul = user_sec_label()
+            el = ent_sec_label(tokens[tok+1]['text'])
+            print("Ent_l "..tokens[tok]['text'].."\n")
+            print("Lables u="..ul.." e="..el.."\n")
+            
+            if ul >= el then
+                return tok+1,false
+            else
+                return tok+1,true
+            end    
+        else
+            return tok,false
+        end
+    end
+tok = tok +1
+end
+
+return tok,false
 
 end
 
@@ -174,7 +200,7 @@ function read_query( packet )
              elseif res == false and tok ~= #tokens and  tokens[tok]['token_name'] == "TK_SQL_UPDATE" then
                  tok,res = upd_check_access(tokens,tok)
              elseif res == false and tok ~= #tokens and  tokens[tok]['token_name'] == "TK_SQL_DELETE" then
-                 tok,res = del_check_access()
+                 tok,res = del_check_access(tokens,tok)
              end
     
              if res == true then
