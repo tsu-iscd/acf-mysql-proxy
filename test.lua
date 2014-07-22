@@ -89,13 +89,13 @@ function ent_sec_label(ent_n)
 
     for k,v in pairs(proxy.global.c) do
         if k == ent_n then
-            return v
+            return v['label']
         end
     end
     
     for k,v in pairs(proxy.global.t) do
         if k == ent_n then
-            return v
+            return v['label']
         end
     end
     for k,v in pairs(proxy.global.db) do
@@ -162,7 +162,7 @@ while tok <= #tokens do
         if tokens[tok]['token_name'] == 'TK_LITERAL' then
 
             ul = user_sec_label()
-            el = ent_sec_label(tokens[tok+1]['text'])
+            el = ent_sec_label(tokens[tok]['text'])
             print("Ent_l "..tokens[tok]['text'].."\n")
             print("Lables u="..ul.." e="..el.."\n")
             
