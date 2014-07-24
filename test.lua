@@ -1,3 +1,44 @@
+--Set max_label parameter to each entity arrays (db,t,c)
+function set_max_label()
+
+max_label=0
+    for kt,vt in pairs(proxy.global.t) do
+        max_label = vt['label']
+
+        for kc,vc in pairs(proxy.global.c) do
+
+            if vc['db'] == vt['db'] and kt == vc['table'] and max_label<vc['label'] then
+
+               max_label=vc['label']
+
+            end
+
+        end
+
+        vt['max_label']=max_label
+        print('T: '..kt..' Max_label: '..max_label..'\n')
+
+    end
+
+    for kd,vd in pairs(proxy.global.db) do
+
+        max_label=vd['label']
+
+        for kt,vt in pairs(proxy.global.t) do
+        
+            if kd == vt['db'] and max_label<vt['max_label'] then
+
+                max_label=vt['max_label']
+
+            end
+
+        end
+
+        vd['max_label']=max_label
+        print('DB: '..kd..' Max_label: '..max_label..'\n')
+
+    end
+end
 
 --Loading user and entities names and security labels (sec_labels) from the file
 function init_sec_labels ()
@@ -43,7 +84,7 @@ print(line)
     if le==false then
         -- Loading DB names and sec_labels
         for dbn,v in string.gmatch(line,"(.+):(%d+)") do
-            proxy.global.db[dbn]=tonumber(v)
+            proxy.global.db[dbn]={label=tonumber(v)}
             c=c+1
         end
     end
@@ -70,6 +111,7 @@ if not proxy.global.u then
     proxy.global.t={}
     proxy.global.c={}
     init_sec_labels()
+    set_max_label()
     end
 
 end
