@@ -127,7 +127,7 @@ for k,v in pairs(proxy.global.u) do
 return -1
 end
 
-function ent_sec_label(ent_n)
+function ent_sec_label(ent_n,max=false)
 
     for k,v in pairs(proxy.global.c) do
         if k == ent_n then
@@ -137,12 +137,18 @@ function ent_sec_label(ent_n)
     
     for k,v in pairs(proxy.global.t) do
         if k == ent_n then
+            if max==true then
+                return v['max_label']
+            end
             return v['label']
         end
     end
     for k,v in pairs(proxy.global.db) do
         if k == ent_n then
-            return v
+            if max==true then
+                return v['max_label']
+            end
+            return v['label']
         end
     end
 
