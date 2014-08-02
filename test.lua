@@ -127,28 +127,37 @@ for k,v in pairs(proxy.global.u) do
 return -1
 end
 
-function ent_sec_label(ent_n,max)
+--ent_sec_label returns the label of the entity. 
+--type=0(db), 1(table), 2(column)
+function ent_sec_label(max,type,db_n,t_n,c_n)
 
-    for k,v in pairs(proxy.global.c) do
-        if k == ent_n then
-            return v['label']
+    if type==2 then
+        for k,v in pairs(proxy.global.c) do
+            if k == c_n and v['db']==db_n and v['table']==t_n then
+                return v['label']
+            end
         end
     end
     
-    for k,v in pairs(proxy.global.t) do
-        if k == ent_n then
-            if max==true then
-                return v['max_label']
+    if type==1 then
+        for k,v in pairs(proxy.global.t) do
+            if k == t_n and v['db']==db_n then
+                if max==true then
+                    return v['max_label']
+                end
+                return v['label']
             end
-            return v['label']
         end
     end
-    for k,v in pairs(proxy.global.db) do
-        if k == ent_n then
-            if max==true then
-                return v['max_label']
+
+    if type==0 then
+        for k,v in pairs(proxy.global.db) do
+            if k == db_n then
+                if max==true then
+                    return v['max_label']
+                end
+                return v['label']
             end
-            return v['label']
         end
     end
 
