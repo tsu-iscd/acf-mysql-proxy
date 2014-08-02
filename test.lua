@@ -186,7 +186,7 @@ end
 
 --Access write. If request is not complex (is_com=false) than check if subject label >= object label than grant access.
 --If request is complex than check and deny access if entities (read) not > than entities (write).
-function access_wite(sub_l,w_obj_l,is_com,r_obj_l)
+function access_write(sub_l,w_obj_l,is_com,r_obj_l)
 
 if is_com==false then
 
@@ -271,15 +271,19 @@ end
 -- Check access to delete entry of the table.
 function del_check_access(tokens,tok)
 
-while tok <= #tokens do
+max_tokens = #tokens
+while tok <= max_tokens do
     if tokens[tok]['token_name'] == "TK_SQL_FROM"  then
         tok = tok +1
         if tokens[tok]['token_name'] == 'TK_LITERAL' then
-
-            if tokens[tok+1]['token_name'] == 'TK_DOT' and tok+2<=#tokens then
-                el = ent_sec_label(true,1,tokens[tok]['text'],tokens[tok+2]['text'],nil)
-            else
-                el=ent_sec_label(true,1,current_db(),tokens[tok]['text'],nil)
+            el = 0
+            if tok+2<=max_tokens then
+                if tokens[tok+1]['token_name'] == 'TK_DOT' then
+                    el = ent_sec_label(true,1,tokens[tok]['text'],tokens[tok+2]['text'],nil)
+                else
+                    el=ent_sec_label(true,1,current_db(),tokens[tok]['text'],nil)
+                end
+            end
 
 
             ul = user_sec_label()
