@@ -156,6 +156,59 @@ return -1
 end
 
 
+
+--Core functions
+--Access read. Check if subject has label >= than label of the object. 
+--Return false in case of access is granted and true in case of access is not granted.
+function access_read(sub_l, obj_l)
+
+if sub_l>=obj_l then
+    return false
+end
+
+return true
+
+end
+
+--Access write. If request is not complex (is_com=false) than check if subject label >= object label than grant access.
+--If request is complex than check and deny access if entities (read) not > than entities (write).
+function access_wite(sub_l,w_obj_l,is_com,r_obj_l)
+
+if is_com==false then
+
+    if sub_l >=w_obj_l then
+        return false
+    end
+
+else 
+
+    if access_read(sub_l,r_obj_l)==false and r_obj_l<=w_obj_l and sub_l>=w_obj_l then
+        return false
+    end
+
+end
+
+return true
+
+end
+
+--Access append. If request is not complex (is_com=false) then check if request is complex then check and deny access if entities (read) not > than entities (write).
+function access_append(sub_l,w_obj_l,is_com,r_obj_l)
+
+if is_com==false then
+    return false
+else
+    if access_read(sub_l,r_obj_l)==false and r_obj_l<=w_obj_l then
+        return false
+    end
+end
+
+return true
+
+end
+
+
+
 function sel_check_access(tokens,tok)
 
 while tok <= #tokens do
