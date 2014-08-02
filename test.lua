@@ -271,8 +271,14 @@ while tok <= #tokens do
         tok = tok +1
         if tokens[tok]['token_name'] == 'TK_LITERAL' then
 
+            if tokens[tok+1]['token_name'] == 'TK_DOT' and tok+2<=#tokens then
+                el = ent_sec_label(true,1,tokens[tok]['text'],tokens[tok+2]['text'],nil)
+            else
+                el=ent_sec_label(true,1,current_db(),tokens[tok]['text'],nil)
+
+
             ul = user_sec_label()
-            el = ent_sec_label(tokens[tok]['text'],true)
+            --el = ent_sec_label(tokens[tok]['text'],true)
             print("Ent_l "..tokens[tok]['text'].."\n")
             print("Lables u="..ul.." e="..el.."\n")
             
