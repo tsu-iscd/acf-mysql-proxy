@@ -116,6 +116,11 @@ if not proxy.global.u then
 
 end
 
+--Returns default DB value (i.e. after use command has been used)
+function current_db()
+    return proxy.connection.client.default_db
+end
+
 function user_sec_label()
 
 for k,v in pairs(proxy.global.u) do
