@@ -280,9 +280,10 @@ while tok <= max_tokens do
             if tok+2<=max_tokens then
                 if tokens[tok+1]['token_name'] == 'TK_DOT' then
                     el = ent_sec_label(true,1,tokens[tok]['text'],tokens[tok+2]['text'],nil)
-                else
-                    el=ent_sec_label(true,1,current_db(),tokens[tok]['text'],nil)
                 end
+            else
+                el=ent_sec_label(true,1,current_db(),tokens[tok]['text'],nil)
+                print("el = "..el.."\n")
             end
 
 
