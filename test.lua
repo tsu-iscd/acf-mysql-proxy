@@ -267,13 +267,14 @@ while tok <= #tokens do
             print("Ent_l "..tokens[tok]['text'].."\n")
             print("Lables u="..ul.." e="..el.."\n")
             
-            if ul >= el then
-                return tok+1,false
-            else
-                return tok+1,true
-            end    
+            --if ul >= el then
+                --return tok+1,false
+            --else
+                --return tok+1,true
+            --end
+            return tok+1,access_write(ul,el,false)    
         else
-            return tok,false
+            return tok,true
         end
     end
 tok = tok +1
