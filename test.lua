@@ -255,19 +255,42 @@ end
 
 function sel_check_access(tokens,tok)
 
+alias_dic={}
+columns_arr={}
+table_arr={}
+table_alias={}
+star=false
 
 while tok <= #tokens do
 
     if tokens[tok]['token_name'] ~= "TK_FUNCTION"  then
-        if tokens[tok]['token_name'] == "TK_SQL_FROM" then
-            while tok <= #tokens do
-                tok = tok +1
-                if tokens[tok]['token_name'] == 'TK_SQL_AS' then
-                    tok=tok+1
-                elseif tokens[tok]['token_name'] == 'TK_SQL_LITERAL' then
+        if tokens[tok+2]['token_name'] == "TK_SQL_LITERAL" then
+            if tokens[tok+3]['token_name']=="TK_SQL_CBRACE" then
+                set_insert(columns_arr,tokens[tok+3]['text'])
+                tok=tok+4
+            elseif tokens[tok+3]['token_name']=="TK_DOT" and tokens[tok+5][token_name]=="TK_SQL_CBRACE" then
+                set_insert(alias_dic,tokens[tok+2]['text'],tokens[tok+4]['text'])
+                tok=tok+6
+            end
+        end
+    end
 
+    if tokens[tok]['token_name'] == "TK_STAR" then
+        star=true
+    end
 
-                    end
+    
+    if tokens[tok]['token_name'] == 'TK_SQL_FROM' then
+        if tokens[tok+1]['token_name'] == 'TK_SQL_LITERAL' and tokens[tok+2]['token_name'] == 'TK_SQL_AS' then
+            set_insert(table_alias,tokens[tok+1]['text'],tokens[tok+3]['text'])
+            tok=tok+3
+        elseif tokens[tok+1]['token_name'] == 'TK_SQL_LITERAL' then
+            set_insert(table_arr,tokens[tok+1]['text'])
+            tok=tok+1
+    end
+
+end
+
             --ul = user_sec_label()
             --el = ent_sec_label(tokens[tok+1]['text'])
             --print("Ent_l "..tokens[tok+1]['text'].."\n")
@@ -276,7 +299,6 @@ while tok <= #tokens do
                 return tok+1,false
             else 
                 return tok+1,true
-            end
             end
         end
     else 
