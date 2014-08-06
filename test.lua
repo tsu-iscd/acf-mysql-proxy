@@ -55,6 +55,21 @@ return a
 
 end
 
+--Insert into dictionary only unique elements
+function set_insert(a,x,y)
+
+    for k,v in pairs(a) do
+        if k == x then
+            return a
+        end
+    end
+
+a[x]=y
+
+return a
+
+end
+
 --Loading user and entities names and security labels (sec_labels) from the file
 function init_sec_labels ()
 
