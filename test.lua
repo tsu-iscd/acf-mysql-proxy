@@ -40,6 +40,21 @@ max_label=0
     end
 end
 
+--Insert into array only unique elements
+function set_insert(a,x)
+
+    for i = 1, #a do
+        if a[i] == x then
+            return a
+        end
+    end
+
+table.insert(a,x)
+
+return a
+
+end
+
 --Loading user and entities names and security labels (sec_labels) from the file
 function init_sec_labels ()
 
@@ -224,6 +239,7 @@ end
 
 
 function sel_check_access(tokens,tok)
+
 
 while tok <= #tokens do
 
