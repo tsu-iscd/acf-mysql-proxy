@@ -70,6 +70,15 @@ return a
 
 end
 
+--Creates a dictinary which includes a tree of entities in the query
+function normilize_entities(dbs,tables,tables_alias,columns,columns_alias)
+res={}
+    if #tables_alias ==0 and #coulmns_alias == 0 then
+        if #dbs == 0 then
+            res[current_db()]={}
+    end
+end
+
 --Loading user and entities names and security labels (sec_labels) from the file
 function init_sec_labels ()
 
@@ -260,8 +269,10 @@ columns_arr={}
 table_arr={}
 table_alias={}
 star=false
+dbs={}
+tok_len=#tokens
 
-while tok <= #tokens do
+while tok <= tok_len do
 
     if tokens[tok]['token_name'] ~= "TK_FUNCTION"  then
         if tokens[tok+2]['token_name'] == "TK_SQL_LITERAL" then
@@ -277,38 +288,80 @@ while tok <= #tokens do
 
     if tokens[tok]['token_name'] == "TK_STAR" then
         star=true
+        tok=tok+1
     end
 
+    if tokens[tok]['token_name'] == 'TK_SQL_LITERAL' then
+        while tok<=tok_len and tokens[tok]['token_name'] ~= 'TK_SQL_FROM' do
+            if tokens[tok]['token_name'] == 'TK_SQL_LITERAL' and tokens[tok+1]['token_name'] == 'TK_DOT' then
+                set_insert(alias_dic,tokens[tok]['text'],tokens[tok+2]['text'])
+                tok=tok+3
+            elseif tokens[tok]['token_name'] == 'TK_SQL_LITERAL' and tokens[tok+1]['token_name'] == 'TK_COMMA' then
+                set_insert(columns_arr,tokens[tok]['text'])
+                tok=tok+2
+            elseif tokens[tok]['token_name'] == 'TK_SQL_LITERAL' and  tokens[tok+1]['token_name'] == 'TK_SQL_FROM' then
+                set_insert(columns_arr,tokens[tok]['text'])
+                tok=tok+1
+            end
+        end
+    end
     
     if tokens[tok]['token_name'] == 'TK_SQL_FROM' then
         if tokens[tok+1]['token_name'] == 'TK_SQL_LITERAL' and tokens[tok+2]['token_name'] == 'TK_SQL_AS' then
             set_insert(table_alias,tokens[tok+1]['text'],tokens[tok+3]['text'])
             tok=tok+3
+        elseif tokens[tok+1]['token_name'] == 'TK_SQL_LITERAL' and tokens[tok+2]['token_name'] == 'TK_DOT' then
+            set_insert(dbs,tokens[tok+1]['text'],tokens[tok+3]['text'])
         elseif tokens[tok+1]['token_name'] == 'TK_SQL_LITERAL' then
             set_insert(table_arr,tokens[tok+1]['text'])
             tok=tok+1
+        end
     end
 
-end
-
-            --ul = user_sec_label()
-            --el = ent_sec_label(tokens[tok+1]['text'])
-            --print("Ent_l "..tokens[tok+1]['text'].."\n")
-            --print("Lables u="..ul.." e="..el.."\n")
-            if ul >= el then
-                return tok+1,false
-            else 
-                return tok+1,true
+    if tok == tok_len or tokens[tok]['token_name']=='TK_SQL_OBRACE' and (#table_alias ~= 0 or #table_arr ~=0) then
+        if #table_arr ~= 0 then
+            ul = user_sec_label()
+            res = true
+            for i = 1,#table_arr do
+                el=ent_sec_label(true,1,current_db(),table_arr[i])
+                res=access_read(ul,el)
+                if res == true then
+                    return tok,true
+                end
+            end
+            return tok,false
+        elseif #table_alias ~=0 then
+            ul = user_sec_label()
+            for c,ac in pairs(alias_dic) do
+                for t,at in pairs(table_alias) do
+                    if at==ac then
+                        if #dbs ==0 then
+                            el=ent_sec_label(true,2,current_db(),t,c)
+                            res=access_read(ul,el)
+                            if res == true then
+                                return tok,true
+                            end
+                        else
+                            for td,d in pairs(dbs) do
+                                if td==t then
+                                    el=ent_sec_label(true,2,d,t,c)
+                                    res=access_read(ul,el)
+                                    if res == true then
+                                        return tok,true
+                                    end
+                                end
+                            end
+                        end
+                     end
+                 end 
             end
         end
-    else 
-        return tok,false
     end
-tok = tok +1
 
+tok=tok+1
 end
 
-return tok,false
+return tok,true
 
 end
 
