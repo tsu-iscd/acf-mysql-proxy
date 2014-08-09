@@ -160,6 +160,7 @@ function current_db()
     return proxy.connection.client.default_db
 end
 
+--Returns security label of the user
 function user_sec_label()
 
 for k,v in pairs(proxy.global.u) do
@@ -169,6 +170,22 @@ for k,v in pairs(proxy.global.u) do
     end
 
 return -1
+end
+
+--Returns the array of column names. Args: db name and table name.
+function columns_arr(dbn,tabn)
+
+    local colsn = {}
+    if #proxy.global.c==0 then
+        return colsn
+    end
+    for k,v in pairs(proxy.global.c) do
+        if v['db']==dbn and v['table']==tabn then
+            table.insert(colsn,k)
+        end
+    end
+
+return colsn
 end
 
 --ent_sec_label returns the label of the entity. 
@@ -412,6 +429,13 @@ tok = tok +1
 end
 
 return tok,false
+
+end
+
+--Returns an array of query and sub-queries.
+function sub_query_tokenize(tokens)
+
+
 
 end
 
