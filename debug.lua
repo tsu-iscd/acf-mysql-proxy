@@ -2,9 +2,6 @@
 
 
 
-
-
-
 function read_query( packet )
     if packet:byte() == proxy.COM_QUERY then
         local parse = require('proxy.parser')
@@ -19,7 +16,8 @@ function read_query( packet )
 
         tbls = parse.get_tables(tokens)
         for k,v in pairs(tbls) do
-            print('tables: '..k..'\nsql: '..v..'\n')
+            local db,t = k:match("([^.]+).([^.]+)")
+            print('db: '..db..'\ntables: '..t..'\nsql: '..v..'\n')
         end
         --print("Toks: "..toks.."\n")
         while tok <= #tokens do

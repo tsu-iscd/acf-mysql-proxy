@@ -435,7 +435,9 @@ end
 --Returns an array of query and sub-queries.
 function sub_query_tokenize(tokens)
 
+    for i=1,#tokens do
 
+    end
 
 end
 
