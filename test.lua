@@ -177,9 +177,6 @@ end
 function columns_arr(dbn,tabn)
 
     local colsn = {}
-    if #proxy.global.c==0 then
-        return colsn
-    end
     for k,v in pairs(proxy.global.c) do
         if v['db']==dbn and v['table']==tabn then
             table.insert(colsn,k)
@@ -282,13 +279,13 @@ end
 --[[
 function sel_check_access(tokens,tok)
 
-alias_dic={}
-columns_arr={}
-table_arr={}
-table_alias={}
-star=false
-dbs={}
-tok_len=#tokens
+local alias_dic={}
+local columns_arr={}
+local table_arr={}
+local table_alias={}
+local star=false
+local dbs={}
+local tok_len=#tokens
 
 while tok <= tok_len do
 
@@ -454,20 +451,26 @@ end
 
 --Searching for columns in the query.
 --Returns an array: {<name_of_the_column>:<true|false>}. True if column in query.
-function find_columns(tokens)
+function find_columns(tokens,dbn,tabn)
 
-    local clms = columns_arr()
+    local clms = columns_arr(dbn,tabn)
     local res = {}
     if #clms==0 then
         return res
     end
 
-    for tok=1,#tokens do
-        if tokens[tok]['token_name']=='TK_SQL_LITERAL' then
+    for tok=1, #tokens do
+        print('Find_columns '..tokens[tok]['token_name'])
+        if tokens[tok]['token_name']=='TK_LITERAL' then
             for i=1,#clms do
-               if tokens[tok].text == clms[i] then
+               print(clms[i])
+               if tokens[tok]['text'] == clms[i] then
                    res[clms[i]]=true
                end
+            end
+        elseif tokens[tok]['token_name']=='TK_STAR' then
+            for i=1, #clms do
+                res[clms[i]]=true
             end
         elseif tokens[tok]['token_name']=='TK_SQL_FROM' then
             return res
@@ -493,57 +496,51 @@ function read_query( packet )
         print(tokens[tok]['token_name'])
         if tokens[tok]['token_name'] == "TK_SQL_DELETE" then
             tok,res = del_check_access(tokens,tok)
-        elseif tokens[tok]['token_name'] == "TK_SQL_SELECT" or tokens[tok]['token_name'] == "TK_SQL_INSERT" or tokens[tok]['token_name'] == "TK_SQL_UPDATE" then
+        elseif tokens[tok]['token_name'] == "TK_SQL_SELECT" then
             local sq=sub_query_tokenize(tokens)
-            if #sq==1 then
-                local tbls = parse.get_tables(sq[1])
-                --print(#tbls)
-                --if #tbls>0 then
-                    print(#tbls)
-                    for k,v in pairs(tbls) do
-                        local db,t = k:match("([^.]+).([^.]+)")
-                        local ul=user_sec_label()
-                        local el=ent_sec_label(true,1,db,t)
-                        print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..t.."\nType = "..v)
 
-                        if v=='read' then
-                            res=access_read(ul,el)
-                            print(res)
-                        elseif v=='write' then
-                            res=access_write(ul,el,false)
+            for t=1,#sq do
+                local tbls = parse.get_tables(sq[t])
+                print('Tables in query = '..#tbls)
+                for k,v in pairs(tbls) do
+                    local db,tab = k:match("([^.]+).([^.]+)")
+                    local ul=user_sec_label()
+                    local clms = find_columns(sq[t],db,tab)
+                    local find = false
+                        for c,fl in pairs(clms) do
+                            print('Column name = '..c)
+                            if fl==true then
+                                find=true
+                                local el=ent_sec_label(true,2,db,tab,c)
+                                print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                                res=access_read(ul,el)
+                                if res == true then
+                                    set_error("Query ("..packet:sub(2)..") was blocked")
+                                    return proxy.PROXY_SEND_RESULT
+                                end
+                                print(res)
+                            end 
                         end
-
-                    
+                    if find==false then 
+                        local el=ent_sec_label(false,1,db,tab)
+                        print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                        res = access_read(ul,el)
+                        if res == true then
+                            set_error("Query ("..packet:sub(2)..") was blocked")
+                            return proxy.PROXY_SEND_RESULT
+                        end
                     end
-                --end
-
+                    
+                end
             end
+
+        elseif tokens[tok]['token_name'] == "TK_SQL_INSERT" or tokens[tok]['token_name'] == "TK_SQL_UPDATE" then
         end
 
         if res == true then
             set_error("Query ("..packet:sub(2)..") was blocked")
             return proxy.PROXY_SEND_RESULT
         end
-        --[[
-        while tok <= #tokens do
-            print(tok)
-        res = false
-             if tokens[tok]['token_name'] == "TK_SQL_SELECT" then
-                 tok,res = sel_check_access(tokens,tok)
-             elseif res ==false and tok ~= #tokens and  tokens[tok]['token_name'] == "TK_SQL_INSERT" then
-                 tok,res = ins_check_access(tokens,tok)
-             elseif res == false and tok ~= #tokens and  tokens[tok]['token_name'] == "TK_SQL_UPDATE" then
-                 tok,res = upd_check_access(tokens,tok)
-             elseif res == false and tok ~= #tokens and  tokens[tok]['token_name'] == "TK_SQL_DELETE" then
-                 tok,res = del_check_access(tokens,tok)
-             end
-
-             if res == true then
-                  set_error("Query ("..packet:sub(2)..") was blocked")
-                  return proxy.PROXY_SEND_RESULT
-             end
-        tok = tok+1
-        end]]
     end
 end
 
