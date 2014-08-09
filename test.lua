@@ -452,9 +452,29 @@ function sub_query_tokenize(tokens)
 return queries
 end
 
-function find_columns()
+--Searching for columns in the query.
+--Returns an array: {<name_of_the_column>:<true|false>}. True if column in query.
+function find_columns(tokens)
 
-    
+    local clms = columns_arr()
+    local res = {}
+    if #clms==0 then
+        return res
+    end
+
+    for tok=1,#tokens do
+        if tokens[tok]['token_name']=='TK_SQL_LITERAL' then
+            for i=1,#clms do
+               if tokens[tok].text == clms[i] then
+                   res[clms[i]]=true
+               end
+            end
+        elseif tokens[tok]['token_name']=='TK_SQL_FROM' then
+            return res
+        end
+    end
+
+return res
 
 end
 
