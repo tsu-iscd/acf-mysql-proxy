@@ -76,6 +76,7 @@ res={}
     if #tables_alias ==0 and #coulmns_alias == 0 then
         if #dbs == 0 then
             res[current_db()]={}
+        end
     end
 end
 
@@ -163,10 +164,10 @@ end
 --Returns security label of the user
 function user_sec_label()
 
-for k,v in pairs(proxy.global.u) do
+    for k,v in pairs(proxy.global.u) do
         if k == proxy.connection.client.username then
             return v
-            end
+        end
     end
 
 return -1
@@ -278,7 +279,7 @@ return true
 end
 
 
-
+--[[
 function sel_check_access(tokens,tok)
 
 alias_dic={}
@@ -389,7 +390,7 @@ end
 function upd_check_access(tokens,tok)
 
 end
-
+]]
 
 -- Check access to delete entry of the table.
 function del_check_access(tokens,tok)
@@ -435,20 +436,56 @@ end
 --Returns an array of query and sub-queries.
 function sub_query_tokenize(tokens)
 
-    for i=1,#tokens do
-
+    local queries={}
+    local qn=0
+    local c=1
+    for tok=1,#tokens do
+        if tokens[tok]['token_name'] == "TK_SQL_SELECT" or tokens[tok]['token_name'] == "TK_SQL_INSERT" or tokens[tok]['token_name'] == "TK_SQL_UPDATE" or tokens[tok]['token_name'] == "TK_SQL_DELETE" then
+            qn=qn+1
+            c=1
+            queries[qn]={}
+        end
+        queries[qn][c]=tokens[tok]
+        c=c+1
     end
 
+return queries
 end
 
 
 function read_query( packet )
 	if packet:byte() == proxy.COM_QUERY then
         local tk = require('proxy.tokenizer')
-        local tokens = tk.tokenize(packet:sub(2))
+        local row_tokens = tk.tokenize(packet:sub(2))
+        local tokens=tk.tokens_without_comments(row_tokens)
+        local parse = require('proxy.parser')
         local tok =1
         print("num_tokens "..#tokens .. "\n")
         print("Query: "..packet:sub(2).."\n")
+
+        local res=false
+
+        if tokens[tok]['token_name'] == "TK_SQL_DELETE" then
+            tok,res = del_check_access(tokens,tok)
+        elseif tokens[tok]['token_name'] == "TK_SQL_SELECT" or tokens[tok]['token_name'] == "TK_SQL_INSERT" or tokens[tok]['token_name'] == "TK_SQL_UPDATE" then
+            local sq=sub_query_tokenize(tokens)
+            for i=1,#sq do
+                --for m=1,#sq[i] do
+                    --print('Token: '..sq[i][m]['token_name']..'\nText: '..sq[i][m]['text'])
+                --end
+                 tbls = parse.get_tables(sq[i])
+                 for k,v in pairs(tbls) do
+                    local db,t = k:match("([^.]+).([^.]+)")
+                    print('db: '..db..'\ntables: '..t..'\nsql: '..v..'\n')
+                 end
+            end
+        end
+
+        if res == true then
+            set_error("Query ("..packet:sub(2)..") was blocked")
+            return proxy.PROXY_SEND_RESULT
+        end
+        --[[
         while tok <= #tokens do
             print(tok)
         res = false
@@ -461,14 +498,13 @@ function read_query( packet )
              elseif res == false and tok ~= #tokens and  tokens[tok]['token_name'] == "TK_SQL_DELETE" then
                  tok,res = del_check_access(tokens,tok)
              end
-    
+
              if res == true then
                   set_error("Query ("..packet:sub(2)..") was blocked")
                   return proxy.PROXY_SEND_RESULT
              end
         tok = tok+1
-        end
+        end]]
     end
 end
-
 
