@@ -452,12 +452,17 @@ function sub_query_tokenize(tokens)
 return queries
 end
 
+function find_columns()
+
+    
+
+end
 
 function read_query( packet )
 	if packet:byte() == proxy.COM_QUERY then
         local tk = require('proxy.tokenizer')
-        local row_tokens = tk.tokenize(packet:sub(2))
-        local tokens=tk.tokens_without_comments(row_tokens)
+        local tokens = tk.tokenize(packet:sub(2))
+        --local tokens=tk.tokens_without_comments(row_tokens)
         local parse = require('proxy.parser')
         local tok =1
         print("num_tokens "..#tokens .. "\n")
@@ -465,19 +470,33 @@ function read_query( packet )
 
         local res=false
 
+        print(tokens[tok]['token_name'])
         if tokens[tok]['token_name'] == "TK_SQL_DELETE" then
             tok,res = del_check_access(tokens,tok)
         elseif tokens[tok]['token_name'] == "TK_SQL_SELECT" or tokens[tok]['token_name'] == "TK_SQL_INSERT" or tokens[tok]['token_name'] == "TK_SQL_UPDATE" then
             local sq=sub_query_tokenize(tokens)
-            for i=1,#sq do
-                --for m=1,#sq[i] do
-                    --print('Token: '..sq[i][m]['token_name']..'\nText: '..sq[i][m]['text'])
+            if #sq==1 then
+                local tbls = parse.get_tables(sq[1])
+                --print(#tbls)
+                --if #tbls>0 then
+                    print(#tbls)
+                    for k,v in pairs(tbls) do
+                        local db,t = k:match("([^.]+).([^.]+)")
+                        local ul=user_sec_label()
+                        local el=ent_sec_label(true,1,db,t)
+                        print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..t.."\nType = "..v)
+
+                        if v=='read' then
+                            res=access_read(ul,el)
+                            print(res)
+                        elseif v=='write' then
+                            res=access_write(ul,el,false)
+                        end
+
+                    
+                    end
                 --end
-                 tbls = parse.get_tables(sq[i])
-                 for k,v in pairs(tbls) do
-                    local db,t = k:match("([^.]+).([^.]+)")
-                    print('db: '..db..'\ntables: '..t..'\nsql: '..v..'\n')
-                 end
+
             end
         end
 
