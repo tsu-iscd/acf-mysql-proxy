@@ -453,7 +453,7 @@ function find_columns(tokens,dbn,tabn)
         return res
     end
 
-    for tok=1, #tokens do
+    for tok=1, #tokens-1 do
         print('Find_columns '..tokens[tok]['token_name'])
         if tokens[tok]['token_name']=='TK_LITERAL' then
             for i=1,#clms do
@@ -466,8 +466,13 @@ function find_columns(tokens,dbn,tabn)
             for i=1, #clms do
                 res[clms[i]]=true
             end
-        elseif tokens[tok]['token_name']=='TK_SQL_FROM' then
-            return res
+        elseif tokens[tok]['token_name']=='TK_LITERAL' and tokens[tok+1]['token_name']=='TK_EQ' then
+            for i=1,#clms do
+                print(clms[i])
+                if tokens[tok]['text'] == clms[i] then
+                   res[clms[i]]=true
+                end
+            end
         end
     end
 
