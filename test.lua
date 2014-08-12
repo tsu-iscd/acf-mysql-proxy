@@ -475,6 +475,38 @@ return res
 
 end
 
+
+
+
+--Searching for columns in the update query.
+--Returns an array: {<name_of_the_column>:<true|false>}. True if column in query.
+function find_columns_upd(tokens,dbn,tabn)
+
+    local clms = columns_arr(dbn,tabn)
+    local res = {}
+    if #clms==0 then
+        return res
+    end
+
+    for tok=1, #tokens-1 do
+        print('Find_columns_upd '..tokens[tok]['token_name'])
+        if tokens[tok]['token_name']=='TK_LITERAL' and tokens[tok+1]['token_name'] == 'TK_EQ' then
+            for i=1,#clms do
+               print(clms[i])
+               if tokens[tok]['text'] == clms[i] then
+                   res[clms[i]]=true
+               end
+            end
+        end
+    end
+
+return res
+
+end
+
+
+
+
 function read_query( packet )
 	if packet:byte() == proxy.COM_QUERY then
         local tk = require('proxy.tokenizer')
@@ -594,7 +626,7 @@ function read_query( packet )
                 print('Tables in query = '..#tbls)
                 for k,v in pairs(tbls) do
                     local db,tab = k:match("([^.]+).([^.]+)")
-                    local clms = find_columns(sq[t],db,tab)
+                    local clms = find_columns_upd(sq[t],db,tab)
                     local find = false
                         for c,fl in pairs(clms) do
                             print('Column name = '..c)
