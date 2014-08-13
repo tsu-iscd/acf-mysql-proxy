@@ -396,13 +396,167 @@ return res
 end
 
 
+-- Check access to select entries of the table.
+function sel_check_access(tokens)
 
+local parse = require('proxy.parser')
+local sq=sub_query_tokenize(tokens)
+local res=false
+
+for t=1,#sq do
+    local tbls = parse.get_tables(sq[t])
+    for k,v in pairs(tbls) do
+        local db,tab = k:match("([^.]+).([^.]+)")
+        local ul=user_sec_label()
+        local clms = find_columns(sq[t],db,tab)
+        local find = false
+        for c,fl in pairs(clms) do
+            print('Column name = '..c)
+            if fl==true then
+                find=true
+                local el=ent_sec_label(true,2,db,tab,c)
+                print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                res=access_read(ul,el)
+                if res == true then
+                    return res
+                end
+            end 
+        end
+        if find==false then 
+            local el=ent_sec_label(false,1,db,tab)
+            print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+            res = access_read(ul,el)
+            if res == true then
+                return res
+            end
+        end       
+    end
+end
+
+return res
+
+end
+
+--Check access to execute insert command.
+function ins_check_access(tokens)
+
+local parse = require('proxy.parser')
+local sq=sub_query_tokenize(tokens)
+local w_obj_l = 0
+local ul=user_sec_label()
+local res = false
+
+for t=1,#sq do
+    local tbls = parse.get_tables(sq[t])
+    for k,v in pairs(tbls) do
+        local db,tab = k:match("([^.]+).([^.]+)")
+        local clms = find_columns(sq[t],db,tab)
+        local find = false
+        for c,fl in pairs(clms) do
+            if fl==true then
+                find=true
+                local el=ent_sec_label(true,2,db,tab,c)
+                if #sq>1 and w_obj_l==0 and t == 1 then
+                    print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                    res=access_append(ul,el,false)
+                    w_obj_l=el
+                elseif #sq == 1 then
+                    res=access_append(ul,el,false)
+                elseif #sq>1 and t>1 then
+                    res=access_append(ul,w_obj_l,true,el)
+                end
+                if res == true then
+                    return res
+                end
+            end
+        end 
+        if find==false then 
+            local el=ent_sec_label(false,1,db,tab)
+            if #sq>1 and w_obj_l==0 and t == 1 then
+                print("No columns. User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                res = access_append(ul,el,false)
+                w_obj_l = el
+            elseif #sq == 1 then
+                print('Sq==1')
+                res = access_append(ul,el,false)
+            elseif #sq>1 and t>1 then
+                print('El == '..el)
+                res = access_append(ul,w_obj_l,true,el)
+            end
+            if res == true then
+                return res
+            end
+        end
+                    
+    end
+end
+
+return res
+
+end
+
+--Check access to execute update command.
+function upd_check_access(tokens)
+
+local parse = require('proxy.parser')
+local sq=sub_query_tokenize(tokens)
+local w_obj_l = 0
+local ul=user_sec_label()
+local res = false
+
+for t=1,#sq do
+    local tbls = parse.get_tables(sq[t])
+    for k,v in pairs(tbls) do
+        local db,tab = k:match("([^.]+).([^.]+)")
+        local clms = find_columns_upd(sq[t],db,tab)
+        local find = false
+        for c,fl in pairs(clms) do
+            if fl==true then
+                find=true
+                local el=ent_sec_label(true,2,db,tab,c)
+                if #sq>1 and w_obj_l==0 and t == 1 then
+                    print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                    res=access_write(ul,el,false)
+                    w_obj_l=el
+                elseif #sq == 1 then
+                    res=access_write(ul,el,false)
+                elseif #sq>1 and t>1 then
+                    res=access_write(ul,w_obj_l,true,el)
+                end
+                if res == true then
+                    return res
+                end
+            end
+        end 
+        if find==false then 
+            local el=ent_sec_label(false,1,db,tab)
+            if #sq>1 and w_obj_l==0 and t == 1 then
+                print("No columns. User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                res = access_write(ul,el,false)
+                w_obj_l = el
+            elseif #sq == 1 then
+                print('WSq==1')
+                res = access_write(ul,el,false)
+            elseif #sq>1 and t>1 then
+                print('WEl == '..el)
+                res = access_write(ul,w_obj_l,true,el)
+            end
+            if res == true then
+                return res
+            end
+        end
+                    
+    end
+end
+
+return res
+
+end
 
 function read_query( packet )
 	if packet:byte() == proxy.COM_QUERY then
         local tk = require('proxy.tokenizer')
         local tokens = tk.tokenize(packet:sub(2))
-        local parse = require('proxy.parser')
         local tok =1
         print("num_tokens "..#tokens .. "\n")
         print("Query: "..packet:sub(2).."\n")
@@ -413,155 +567,11 @@ function read_query( packet )
         if tokens[tok]['token_name'] == "TK_SQL_DELETE" then
             tok,res = del_check_access(tokens,tok)
         elseif tokens[tok]['token_name'] == "TK_SQL_SELECT" then
-            local sq=sub_query_tokenize(tokens)
-
-            for t=1,#sq do
-                local tbls = parse.get_tables(sq[t])
-                print('Tables in query = '..#tbls)
-                for k,v in pairs(tbls) do
-                    local db,tab = k:match("([^.]+).([^.]+)")
-                    local ul=user_sec_label()
-                    local clms = find_columns(sq[t],db,tab)
-                    local find = false
-                        for c,fl in pairs(clms) do
-                            print('Column name = '..c)
-                            if fl==true then
-                                find=true
-                                local el=ent_sec_label(true,2,db,tab,c)
-                                print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
-                                res=access_read(ul,el)
-                                if res == true then
-                                    set_error("Query ("..packet:sub(2)..") was blocked")
-                                    return proxy.PROXY_SEND_RESULT
-                                end
-                                print(res)
-                            end 
-                        end
-                    if find==false then 
-                        local el=ent_sec_label(false,1,db,tab)
-                        print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
-                        res = access_read(ul,el)
-                        if res == true then
-                            set_error("Query ("..packet:sub(2)..") was blocked")
-                            return proxy.PROXY_SEND_RESULT
-                        end
-                    end
-                    
-                end
-            end
-
+            res = sel_check_access(tokens)
         elseif tokens[tok]['token_name'] == "TK_SQL_INSERT" then
-            local sq=sub_query_tokenize(tokens)
-            local w_obj_l = 0
-            local ul=user_sec_label()
-            local count = 0
-            for t=1,#sq do
-                count=count +1
-                local tbls = parse.get_tables(sq[t])
-                print('Tables in query = '..#tbls)
-                for k,v in pairs(tbls) do
-                    local db,tab = k:match("([^.]+).([^.]+)")
-                    local clms = find_columns(sq[t],db,tab)
-                    local find = false
-                        for c,fl in pairs(clms) do
-                            print('Column name = '..c)
-                            if fl==true then
-                                find=true
-                                local el=ent_sec_label(true,2,db,tab,c)
-                                if #sq>1 and w_obj_l==0 and count == 1 then
-                                    print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
-                                    res=access_append(ul,el,false)
-                                    w_obj_l=el
-                                elseif #sq == 1 then
-                                    res=access_append(ul,el,false)
-                                elseif #sq>1 and count>1 then
-                                    res=access_append(ul,w_obj_l,true,el)
-                                end
-                                if res == true then
-                                    set_error("Query ("..packet:sub(2)..") was blocked")
-                                    return proxy.PROXY_SEND_RESULT
-                                end
-                                print(res)
-                            end
-                        end 
-                    if find==false then 
-                        local el=ent_sec_label(false,1,db,tab)
-                        if #sq>1 and w_obj_l==0 and count == 1 then
-                            print("No columns. User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
-                            res = access_append(ul,el,false)
-                            w_obj_l = el
-                        elseif #sq == 1 then
-                            print('Sq==1')
-                            res = access_append(ul,el,false)
-                        elseif #sq>1 and count>1 then
-                            print('El == '..el)
-                            res = access_append(ul,w_obj_l,true,el)
-                        end
-
-                        if res == true then
-                            set_error("Query ("..packet:sub(2)..") was blocked")
-                            return proxy.PROXY_SEND_RESULT
-                        end
-                    end
-                    
-                end
-            end
+            res = ins_check_access(tokens)
         elseif tokens[tok]['token_name'] == "TK_SQL_UPDATE" then
-            local sq=sub_query_tokenize(tokens)
-            local w_obj_l = 0
-            local ul=user_sec_label()
-            local count = 0
-            for t=1,#sq do
-                count=count +1
-                local tbls = parse.get_tables(sq[t])
-                print('Tables in query = '..#tbls)
-                for k,v in pairs(tbls) do
-                    local db,tab = k:match("([^.]+).([^.]+)")
-                    local clms = find_columns_upd(sq[t],db,tab)
-                    local find = false
-                        for c,fl in pairs(clms) do
-                            print('Column name = '..c)
-                            if fl==true then
-                                find=true
-                                local el=ent_sec_label(true,2,db,tab,c)
-                                if #sq>1 and w_obj_l==0 and count == 1 then
-                                    print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
-                                    res=access_write(ul,el,false)
-                                    w_obj_l=el
-                                elseif #sq == 1 then
-                                    res=access_write(ul,el,false)
-                                elseif #sq>1 and count>1 then
-                                    res=access_write(ul,w_obj_l,true,el)
-                                end
-                                if res == true then
-                                    set_error("Query ("..packet:sub(2)..") was blocked")
-                                    return proxy.PROXY_SEND_RESULT
-                                end
-                                print(res)
-                            end
-                        end 
-                    if find==false then 
-                        local el=ent_sec_label(false,1,db,tab)
-                        if #sq>1 and w_obj_l==0 and count == 1 then
-                            print("No columns. User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
-                            res = access_write(ul,el,false)
-                            w_obj_l = el
-                        elseif #sq == 1 then
-                            print('WSq==1')
-                            res = access_write(ul,el,false)
-                        elseif #sq>1 and count>1 then
-                            print('WEl == '..el)
-                            res = access_write(ul,w_obj_l,true,el)
-                        end
-
-                        if res == true then
-                            set_error("Query ("..packet:sub(2)..") was blocked")
-                            return proxy.PROXY_SEND_RESULT
-                        end
-                    end
-                    
-                end
-            end
+            res = upd_check_access(tokens)
         end
 
         if res == true then
