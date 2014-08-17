@@ -1,6 +1,12 @@
-json = require("json")
+local json = require "json"
 
-local raw_json_text = json:encode({ 1, 2, 'fred', {first='mars',second='venus',third='earth'} })
-local lua_v = json:decode(raw_json_text)
-print(raw_json_text)
-print(lua_v)
+local te =  io.open("te.json","r")
+local raw_json = te:read("*all")
+print(raw_json)
+local lua_v = json.decode( raw_json )
+
+for k,v in pairs(lua_v) do
+    print(k)
+end
+
+te:close()
