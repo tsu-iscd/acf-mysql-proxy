@@ -1,7 +1,7 @@
 {
 
     "domains": { "user_d":"root" },
-    "types": {"routine_d":"test"},
-    "privileges": {"execute":{"user_d":"routine_d"}}
+    "types": {"routine_t":"test"},
+    "privileges": {"execute":{"user_d":"routine_t"}}
 
 }
