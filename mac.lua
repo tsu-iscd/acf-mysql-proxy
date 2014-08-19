@@ -1,3 +1,38 @@
+--Load DTE policy (domains, types and privileges).
+function load_dte_policy()
+local json = require("json")
+
+local te =  io.open("dte.json","r")
+local raw_json = te:read("*all")
+local lua_v = json.decode( raw_json )
+
+for k,v in pairs(lua_v) do
+    if k == "domains" then
+        for d,n in pairs(v) do
+            proxy.global.domain[d]=n
+            print("Domain: "..d.." Name: "..n)
+        end
+    end
+    if k == "types" then
+        for t,n in pairs(v) do
+            proxy.global.type[t]=n
+            print("Type: "..t.." Name: "..n)
+        end
+    end
+    if k == "privileges" then
+        for p,dt in pairs(v) do
+            for d,t in pairs(dt) do
+                proxy.global.priv[p]={domain=d,type=t}
+                print("Priv: "..p.." Domain: "..d.." Type: "..t)
+            end
+        end 
+    end
+end
+
+te:close()
+
+end
+
 --Set max_label parameter to each entity arrays (db,t,c)
 function set_max_label()
 
@@ -150,8 +185,12 @@ if not proxy.global.u then
     proxy.global.db={}
     proxy.global.t={}
     proxy.global.c={}
+    proxy.global.domain={}
+    proxy.global.type={}
+    proxy.global.priv={}
     init_sec_labels()
     set_max_label()
+    load_dte_policy()
     end
 
 end
