@@ -592,6 +592,7 @@ return res
 
 end
 
+--Check access to execute routine (procedure or function). DTE policy is used.
 function call_check_access(tokens)
 
 local max_tokens = #tokens
