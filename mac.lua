@@ -592,6 +592,49 @@ return res
 
 end
 
+function call_check_access(tokens)
+
+local max_tokens = #tokens
+local tok=2
+while tok<=max_tokens do
+
+    if tokens[tok]['token_name'] == "TK_FUNCTION" then
+
+        local domain=''
+        for k,v in pairs(proxy.global.domain) do
+            if v == proxy.connection.client.username then
+                print("Domain name: "..k)
+                domain = k
+            end
+        end
+
+        local type_n=''
+        for k,v in pairs(proxy.global.type) do
+            if v == tokens[tok]['text'] then
+                print("Type name: "..k)
+                type_n = k
+            end
+        end
+
+        for k,v in pairs(proxy.global.priv) do
+            if v['domain'] == domain and v['type'] == type_n then
+                print("Access: "..k)
+                if k == "execute" then
+                    return false
+                end
+            end
+        end
+
+    end
+
+tok=tok+1
+
+end
+
+return true;
+
+end
+
 function read_query( packet )
 	if packet:byte() == proxy.COM_QUERY then
         local tk = require('proxy.tokenizer')
@@ -611,6 +654,8 @@ function read_query( packet )
             res = ins_check_access(tokens)
         elseif tokens[tok]['token_name'] == "TK_SQL_UPDATE" then
             res = upd_check_access(tokens)
+        elseif tokens[tok]['token_name'] == "TK_SQL_CALL" then
+            res = call_check_access(tokens)
         end
 
         if res == true then
