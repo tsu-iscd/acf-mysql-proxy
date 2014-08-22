@@ -356,7 +356,7 @@ function sub_query_tokenize(tokens)
     local qn=0
     local c=1
     for tok=1,#tokens do
-        if tokens[tok]['token_name'] == "TK_SQL_SELECT" or tokens[tok]['token_name'] == "TK_SQL_INSERT" or tokens[tok]['token_name'] == "TK_SQL_UPDATE" or tokens[tok]['token_name'] == "TK_SQL_DELETE" then
+        if tokens[tok]['token_name'] == "TK_SQL_SELECT" or tokens[tok]['token_name'] == "TK_SQL_INSERT" or tokens[tok]['token_name'] == "TK_SQL_UPDATE" or tokens[tok]['token_name'] == "TK_SQL_DELETE" or tokens[tok]['token_name'] == "TK_SQL_REPLACE" then
             qn=qn+1
             c=1
             queries[qn]={}
@@ -651,7 +651,7 @@ function read_query( packet )
             tok,res = del_check_access(tokens,tok)
         elseif tokens[tok]['token_name'] == "TK_SQL_SELECT" then
             res = sel_check_access(tokens)
-        elseif tokens[tok]['token_name'] == "TK_SQL_INSERT" then
+        elseif tokens[tok]['token_name'] == "TK_SQL_INSERT" or tokens[tok]['token_name'] == "TK_SQL_REPLACE" then
             res = ins_check_access(tokens)
         elseif tokens[tok]['token_name'] == "TK_SQL_UPDATE" then
             res = upd_check_access(tokens)
