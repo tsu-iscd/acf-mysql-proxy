@@ -636,6 +636,43 @@ return true;
 
 end
 
+--Check access to execute handler operator. 
+function handler_check_access(tokens)
+
+local max_tokens = #tokens
+local tok=1
+local res = true
+
+if max_tokens < 3 then
+    return res
+end
+
+while tok<=max_tokens do
+    tok=tok+1
+
+    if tokens[tok].text:upper() == "OPEN" then
+        local db_h = ''
+        local tbl_h = ''
+        if tokens[tok-1].token_name == "TK_LITERAL" then
+            tbl_h = tokens[tok-1].text
+            if tokens[tok-2]['token_name'] == "TK_DOT" then
+                db_h = tokens[tok-3].text
+            else
+                db_h = current_db()
+            end
+        end
+        local ul = user_sec_label()
+        local el=ent_sec_label(true,1,db_h,tbl_h)
+        res = access_read(ul,el)
+        return res
+    end
+
+end
+
+return res
+
+end
+
 function read_query( packet )
 	if packet:byte() == proxy.COM_QUERY then
         local tk = require('proxy.tokenizer')
@@ -657,6 +694,10 @@ function read_query( packet )
             res = upd_check_access(tokens)
         elseif tokens[tok]['token_name'] == "TK_SQL_CALL" then
             res = call_check_access(tokens)
+        elseif tokens[tok]['token_name'] == "TK_LITERAL" then
+            if tokens[tok].text:upper() == "HANDLER" then
+                res = handler_check_access(tokens)
+            end
         end
 
         if res == true then
