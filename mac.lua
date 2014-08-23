@@ -641,13 +641,13 @@ function handler_check_access(tokens)
 
 local max_tokens = #tokens
 local tok=1
-local res = true
+local res = false
 
 if max_tokens < 3 then
     return res
 end
 
-while tok<=max_tokens do
+while tok<max_tokens do
     tok=tok+1
 
     if tokens[tok].text:upper() == "OPEN" then
