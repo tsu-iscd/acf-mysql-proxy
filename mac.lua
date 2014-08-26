@@ -620,7 +620,7 @@ while tok<=max_tokens do
         for k,v in pairs(proxy.global.priv) do
             if v['domain'] == domain and v['type'] == type_n then
                 print("Access: "..k)
-                if k == "execute" then
+                if k:upper() == "EXECUTE" then
                     return false
                 end
             end
