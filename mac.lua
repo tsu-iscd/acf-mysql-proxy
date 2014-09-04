@@ -502,7 +502,7 @@ for t=1,#sq do
             if fl==true then
                 find=true
                 local el=ent_sec_label(true,2,db,tab,c)
-                --print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                print("User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
                 res=access_read(ul,el)
                 if res == true then
                     return res
@@ -511,7 +511,7 @@ for t=1,#sq do
         end
         if find==false then 
             local el=ent_sec_label(false,1,db,tab)
-            --print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+            print("User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
             res = access_read(ul,el)
             if res == true then
                 return res
@@ -544,7 +544,7 @@ for t=1,#sq do
                 find=true
                 local el=ent_sec_label(true,2,db,tab,c)
                 if #sq>1 and w_obj_l==0 and t == 1 then
-                    print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                    print("User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
                     res=access_append(ul,el,false)
                     w_obj_l=el
                 elseif #sq == 1 then
@@ -560,7 +560,7 @@ for t=1,#sq do
         if find==false then 
             local el=ent_sec_label(false,1,db,tab)
             if #sq>1 and w_obj_l==0 and t == 1 then
-                print("No columns. User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                print("No columns. User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
                 res = access_append(ul,el,false)
                 w_obj_l = el
             elseif #sq == 1 then
@@ -602,7 +602,7 @@ for t=1,#sq do
                 find=true
                 local el=ent_sec_label(true,2,db,tab,c)
                 if #sq>1 and w_obj_l==0 and t == 1 then
-                    print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                    print("User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
                     res=access_write(ul,el,false)
                     w_obj_l=el
                 elseif #sq == 1 then
@@ -618,7 +618,7 @@ for t=1,#sq do
         if find==false then 
             local el=ent_sec_label(false,1,db,tab)
             if #sq>1 and w_obj_l==0 and t == 1 then
-                print("No columns. User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                print("No columns. User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
                 res = access_write(ul,el,false)
                 w_obj_l = el
             elseif #sq == 1 then
