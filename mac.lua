@@ -180,6 +180,48 @@ end
 
 function connect_server()
 
+local LCS = require 'LCS'
+
+Entity = LCS.class.abstract {user = nil, db=nil, tbl=nil, clmn=nil, type=nil, access_type = nil, access_to=nil, sec_label=nil}
+
+function Entity:init(dbn,slbl)
+self.db = dbn
+self.sec_label = slbl
+end
+
+function Entity:describe()
+    if self.user ~= nil then
+        return self.user
+    elseif self.db ~= nil then
+        return self.db
+    elseif self.tbl ~= nil then
+        return self.tbl
+    elseif self.clmn ~= nil then
+        return self.clmn
+    end
+    return 'Nil'
+end
+
+Entity.__eq = function (o,t)
+    return o.sec_label == t.sec_label
+end
+
+Entity.__lt = function (o,t)
+    return o.sec_label < t.sec_label
+end
+
+Entity.__le = function (o,t)
+    return o.sec_label <= t.sec_label
+end
+
+Entity.__gt = function (o,t)
+    return o.sec_label > t.sec_label
+end
+
+Entity.__ge = function (o,t)
+    return o.sec_label >= t.sec_label
+end
+
 if not proxy.global.u then
     proxy.global.u={}
     proxy.global.db={}
