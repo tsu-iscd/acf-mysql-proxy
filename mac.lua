@@ -124,7 +124,8 @@ local fr = io.open("users.txt","r")
 c=0
 for line in fr:lines() do
     for k, v in string.gmatch(line,"(%w+):(%d+)") do
-            proxy.global.u[k]=tonumber(v)
+            local subj = Entity:extends{user=k,sec_label=tonumber(v)}
+            proxy.global.u[k]={label=tonumber(v),obj=subj}
     end
 c=c+1
 end
@@ -142,7 +143,8 @@ print(line)
     
     -- Loading DB, Table, column names and sec_labels
     for dbn,tn,cn,v in string.gmatch(line,"(.+):(.+):(.+):(%d+)") do
-        proxy.global.c[cn]={db=dbn,table=tn,label=tonumber(v)}
+        local robj = Entity:extends{db=dbn,tbl=tn,clmn=cn, type=2,sec_label=tonumber(v)}
+        proxy.global.c[cn]={db=dbn,table=tn,label=tonumber(v),obj=robj}
         c=c+1
         le=true
     end
@@ -150,7 +152,8 @@ print(line)
     if le==false then
         -- Loading DB,Table names and sec_labels
         for dbn,tn,v in string.gmatch(line,"(.+):(.+):(%d+)") do
-           proxy.global.t[tn]={db=dbn,label=tonumber(v)}
+           local robj = Entity:extends{db=dbn,tbl=tn, type=1,sec_label=tonumber(v)}
+           proxy.global.t[tn]={db=dbn,label=tonumber(v),obj=robj}
            c=c+1
            le=true
         end
@@ -159,7 +162,8 @@ print(line)
     if le==false then
         -- Loading DB names and sec_labels
         for dbn,v in string.gmatch(line,"(.+):(%d+)") do
-            proxy.global.db[dbn]={label=tonumber(v)}
+            local robj = Entity:extends{db=dbn,type=0,sec_label=tonumber(v)}
+            proxy.global.db[dbn]={label=tonumber(v),obj=robj}
             c=c+1
         end
     end
@@ -182,7 +186,7 @@ function connect_server()
 
 local LCS = require 'LCS'
 
-Entity = LCS.class.abstract {user = nil, db=nil, tbl=nil, clmn=nil, type=nil, access_type = nil, access_to=nil, sec_label=nil}
+Entity = LCS.class.abstract {access_type = nil, access_to=nil, sec_label=nil}
 
 function Entity:init(dbn,slbl)
 self.db = dbn
