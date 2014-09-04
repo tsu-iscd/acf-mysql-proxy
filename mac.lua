@@ -251,7 +251,7 @@ function user_sec_label()
 
     for k,v in pairs(proxy.global.u) do
         if k == proxy.connection.client.username then
-            return v
+            return v['obj']
         end
     end
 
@@ -278,7 +278,7 @@ function ent_sec_label(max,type,db_n,t_n,c_n)
     if type==2 then
         for k,v in pairs(proxy.global.c) do
             if k == c_n and v['db']==db_n and v['table']==t_n then
-                return v['label']
+                return v['obj']
             end
         end
     end
@@ -287,9 +287,10 @@ function ent_sec_label(max,type,db_n,t_n,c_n)
         for k,v in pairs(proxy.global.t) do
             if k == t_n and v['db']==db_n then
                 if max==true then
-                    return v['max_label']
+                    local robj = Entity:extends{db=v['db'],tbl=k, type=1,sec_label=v['max_label']}
+                    return robj
                 end
-                return v['label']
+                return v['obj']
             end
         end
     end
@@ -298,9 +299,10 @@ function ent_sec_label(max,type,db_n,t_n,c_n)
         for k,v in pairs(proxy.global.db) do
             if k == db_n then
                 if max==true then
-                    return v['max_label']
+                    local robj = Entity:extends{db=k, type=0,sec_label=v['max_label']}
+                    return robj
                 end
-                return v['label']
+                return v['obj']
             end
         end
     end
@@ -500,7 +502,7 @@ for t=1,#sq do
             if fl==true then
                 find=true
                 local el=ent_sec_label(true,2,db,tab,c)
-                print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+                --print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
                 res=access_read(ul,el)
                 if res == true then
                     return res
@@ -509,7 +511,7 @@ for t=1,#sq do
         end
         if find==false then 
             local el=ent_sec_label(false,1,db,tab)
-            print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
+            --print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
             res = access_read(ul,el)
             if res == true then
                 return res
