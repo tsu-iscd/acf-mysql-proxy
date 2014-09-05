@@ -778,7 +778,6 @@ local type_n=''
 local wc_db = db_name..".*"
 local wc_db_tb = db_name.."."..table_name
 for k,v in pairs(proxy.global.type) do
-    print(v)
     if v == wc_db_tb or v==wc_db then
         print("Type name: "..k)
         type_n = k
