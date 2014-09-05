@@ -724,8 +724,8 @@ return res
 
 end
 
---Check access to execute LOAD XML operator. 
-function load_xml_check_access(tokens)
+--Check access to execute LOAD XML and LOAD DATA INFILE operators. 
+function load_check_access(tokens)
 
 local max_tokens = #tokens
 local tok=1
@@ -788,7 +788,7 @@ end
 for k,v in pairs(proxy.global.priv) do
     if v['domain'] == domain and v['type'] == type_n then
         print("Access: "..k)
-        if k:upper() == "LOAD_FROM_XML" then
+        if k:upper() == "LOAD_FROM_FILE" then
             return false
         end
     end
@@ -822,8 +822,8 @@ function read_query( packet )
             res = upd_check_access(tokens)
         elseif tokens[tok]['token_name'] == "TK_SQL_CALL" then
             res = call_check_access(tokens)
-        elseif tokens[tok]['token_name'] == "TK_SQL_LOAD" and tokens[tok+1].text:upper() == "XML" then
-            res = load_xml_check_access(tokens)
+        elseif tokens[tok]['token_name'] == "TK_SQL_LOAD" then
+            res = load_check_access(tokens)
         elseif tokens[tok]['token_name'] == "TK_LITERAL" then
             if tokens[tok].text:upper() == "HANDLER" then
                 res = handler_check_access(tokens)
