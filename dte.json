@@ -1,7 +1,7 @@
 {
 
     "domains": { "user_d":"root" },
-    "types": {"routine_t":"p","test_db":"test1.*"},
-    "privileges": {"execute":{"user_d":"routine_t"},"load_from_xml":{"user_d":"test_db"}}
+    "types": {"routine_t":"p","test_db":"test.*"},
+    "privileges": {"execute":{"user_d":"routine_t"},"load_from_file":{"user_d":"test_db"}}
 
 }
