@@ -377,13 +377,13 @@ while tok <= max_tokens do
                 end
             else
                 el=ent_sec_label(true,1,current_db(),tokens[tok]['text'],nil)
-                print("el = "..el.."\n")
+                --print("el = "..el.."\n")
             end
 
 
             ul = user_sec_label()
-            print("Ent_l "..tokens[tok]['text'].."\n")
-            print("Lables u="..ul.." e="..el.."\n")
+            --print("Ent_l "..tokens[tok]['text'].."\n")
+            --print("Lables u="..ul.." e="..el.."\n")
             
             return tok+1,access_write(ul,el,false)    
         else
@@ -721,6 +721,83 @@ return res
 
 end
 
+--Check access to execute LOAD XML operator. 
+function load_xml_check_access(tokens)
+
+local max_tokens = #tokens
+local tok=1
+local res = true
+local file_name = ''
+local db_name = ''
+local table_name = ''
+
+if max_tokens < 3 then
+    return res
+end
+
+while tok<max_tokens and db_name == '' and table_name == '' do
+    tok=tok+1
+
+    if tokens[tok]['token_name'] == "TK_SQL_INFILE" and tokens[tok+1]['token_name'] == "TK_STRING" then
+        file_name = tokens[tok+1].text
+        print('File name: '..file_name)
+    end
+
+    if tokens[tok]['token_name'] == "TK_SQL_TABLE" then
+        if tokens[tok+1].token_name == "TK_LITERAL" then
+            if tok+2>=max_tokens then
+                db_name = current_db()
+                table_name = tokens[tok+1].text
+            else
+                if tokens[tok+2]['token_name'] == "TK_DOT" then
+                    db_name = tokens[tok+1].text
+                    table_name = tokens[tok+3].text
+                else
+                    db_name = current_db()
+                    table_name = tokens[tok+1].text
+                end
+            end
+        end
+    end
+
+end
+
+
+local domain=''
+for k,v in pairs(proxy.global.domain) do
+    if v == proxy.connection.client.username then
+        print("Domain name: "..k)
+        domain = k
+    end
+end
+
+local type_n=''
+local wc_db = db_name..".*"
+local wc_db_tb = db_name.."."..table_name
+for k,v in pairs(proxy.global.type) do
+    print(v)
+    if v == wc_db_tb or v==wc_db then
+        print("Type name: "..k)
+        type_n = k
+    end
+end
+
+for k,v in pairs(proxy.global.priv) do
+    if v['domain'] == domain and v['type'] == type_n then
+        print("Access: "..k)
+        if k:upper() == "LOAD_FROM_XML" then
+            return false
+        end
+    end
+end
+
+
+return res
+
+end
+
+
+
 function read_query( packet )
 	if packet:byte() == proxy.COM_QUERY then
         local tk = require('proxy.tokenizer')
@@ -742,6 +819,8 @@ function read_query( packet )
             res = upd_check_access(tokens)
         elseif tokens[tok]['token_name'] == "TK_SQL_CALL" then
             res = call_check_access(tokens)
+        elseif tokens[tok]['token_name'] == "TK_SQL_LOAD" and tokens[tok+1].text:upper() == "XML" then
+            res = load_xml_check_access(tokens)
         elseif tokens[tok]['token_name'] == "TK_LITERAL" then
             if tokens[tok].text:upper() == "HANDLER" then
                 res = handler_check_access(tokens)
