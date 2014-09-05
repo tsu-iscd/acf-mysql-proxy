@@ -50,7 +50,10 @@ max_label=0
 
         end
 
+        
         vt['max_label']=max_label
+        local robj = Entity:extends{db=vt['db'],tbl=kt, type=1,sec_label=max_label}
+        vt['max_label_obj'] = robj
         print('T: '..kt..' Max_label: '..max_label..'\n')
 
     end
@@ -69,7 +72,9 @@ max_label=0
 
         end
 
+        local robj = Entity:extends{db=kd, type=0,sec_label=max_label}
         vd['max_label']=max_label
+        vd['max_label_obj']=robj
         print('DB: '..kd..' Max_label: '..max_label..'\n')
 
     end
@@ -287,8 +292,8 @@ function ent_sec_label(max,type,db_n,t_n,c_n)
         for k,v in pairs(proxy.global.t) do
             if k == t_n and v['db']==db_n then
                 if max==true then
-                    local robj = Entity:extends{db=v['db'],tbl=k, type=1,sec_label=v['max_label']}
-                    return robj
+                    --local robj = Entity:extends{db=v['db'],tbl=k, type=1,sec_label=v['max_label']}
+                    return v['max_label_obj']
                 end
                 return v['obj']
             end
@@ -299,8 +304,8 @@ function ent_sec_label(max,type,db_n,t_n,c_n)
         for k,v in pairs(proxy.global.db) do
             if k == db_n then
                 if max==true then
-                    local robj = Entity:extends{db=k, type=0,sec_label=v['max_label']}
-                    return robj
+                    --local robj = Entity:extends{db=k, type=0,sec_label=v['max_label']}
+                    return v['max_label_obj']
                 end
                 return v['obj']
             end
@@ -376,14 +381,15 @@ while tok <= max_tokens do
                     el = ent_sec_label(true,1,tokens[tok]['text'],tokens[tok+2]['text'],nil)
                 end
             else
+                print('aaaa')
                 el=ent_sec_label(true,1,current_db(),tokens[tok]['text'],nil)
-                --print("el = "..el.."\n")
+                print("el = "..el.sec_label.."\n")
             end
 
 
             ul = user_sec_label()
             --print("Ent_l "..tokens[tok]['text'].."\n")
-            --print("Lables u="..ul.." e="..el.."\n")
+            print("Lables u="..ul.sec_label.." e="..el.sec_label.."\n")
             
             return tok+1,access_write(ul,el,false)    
         else
