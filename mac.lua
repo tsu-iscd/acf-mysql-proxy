@@ -381,14 +381,11 @@ while tok <= max_tokens do
                     el = ent_sec_label(true,1,tokens[tok]['text'],tokens[tok+2]['text'],nil)
                 end
             else
-                print('aaaa')
                 el=ent_sec_label(true,1,current_db(),tokens[tok]['text'],nil)
-                print("el = "..el.sec_label.."\n")
             end
 
 
             ul = user_sec_label()
-            --print("Ent_l "..tokens[tok]['text'].."\n")
             print("Lables u="..ul.sec_label.." e="..el.sec_label.."\n")
             
             return tok+1,access_write(ul,el,false)    
