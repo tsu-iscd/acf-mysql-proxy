@@ -788,7 +788,10 @@ for k,v in pairs(proxy.global.priv) do
     if v['domain'] == domain and v['type'] == type_n then
         print("Access: "..k)
         if k:upper() == "LOAD_FROM_FILE" then
-            return false
+            local ul = user_sec_label()
+            local el=ent_sec_label(true,1,db_name,table_name)
+            res = access_write(ul,el,false)
+            return res
         end
     end
 end
