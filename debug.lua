@@ -1,6 +1,22 @@
 
 
+function comment_tokenizer(tok_text)
 
+local ctk = require('proxy.tokenizer')
+local comment_toks  = ctk.tokenize(tok_text)
+local ctok = 1
+
+print("TK_COMMENT LEX ----------------BEGIN------ "..tok_text.."\n")
+while ctok <= #comment_toks do
+    if comment_toks[ctok]['token_name'] == 'TK_COMMENT' then
+        comment_tokenizer(comment_toks[ctok]['text'])
+    end
+    print(".. "..comment_toks[ctok]['token_name'].." : "..comment_toks[ctok]['text'].."\n")
+    ctok = ctok+1
+end
+print("TK_COMMENT LEX ----------------END------\n")
+
+end
 
 function read_query( packet )
     if packet:byte() == proxy.COM_QUERY then
@@ -21,7 +37,11 @@ function read_query( packet )
         end
         --print("Toks: "..toks.."\n")
         while tok <= #tokens do
-            print(tokens[tok]['token_name'].." : "..tokens[tok]['text'].."\n")
+            if tokens[tok]['token_name'] == 'TK_COMMENT' then
+                comment_tokenizer(tokens[tok]['text'])
+            else
+                print(tokens[tok]['token_name'].." : "..tokens[tok]['text'].."\n")
+            end
             tok = tok+1
         end
     end
