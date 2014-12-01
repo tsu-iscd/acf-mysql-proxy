@@ -1,0 +1,10 @@
+{
+
+    "test": { "label":"3", "max_label":"5", 
+            "tables": {
+                "asd": {"label":"4","max_label":"5","columns":{"str":"5"}}, 
+                "qwe": {"label":"4","max_label":"4","columns":{}}
+                      } 
+            }
+
+}
