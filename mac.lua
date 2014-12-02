@@ -1,7 +1,5 @@
 --Load DTE policy (domains, types and privileges).
 function load_dte_policy()
-local json = require("json")
-
 local te =  io.open("dte.json","r")
 local raw_json = te:read("*all")
 local lua_v = json.decode( raw_json )
@@ -121,26 +119,23 @@ res={}
 end
 
 --Loading user and entities names and security labels (sec_labels) from the file
-function init_sec_labels ()
+function init_sec_labels()
 
 print("Initialization of security labels\n")
-local json = require("json")
-local fr = io.open("ent.json","r")
-local raw_json = fr:read("*all")
-local lua_v = json.decode(raw_json)
 
+
+local cu = 0
+local ce = 0
 
 for k,v in pairs(lua_v) do
-    cu = 0
     if k == "users" then
-        for u,l in pairs(v) do
-            local subj = Entity:extends{user=u,sec_label=tonumber(l)}
-            proxy.global.u[u]={label=tonumber(l),obj=subj}
+        for un, l in pairs(v) do
+            local subj = Entity:extends{user=un,sec_label=tonumber(l)}
+            proxy.global.u[un]={label=tonumber(l),obj=subj}
             cu=cu+1
         end
     end
 
-    ce=0
     if k == "dbs" then
         for dbn,at in pairs(v) do
             for n,l in pairs(at) do
@@ -161,7 +156,7 @@ for k,v in pairs(lua_v) do
                                 proxy.global.t[tn]={db=dbn,label=tonumber(tv),obj=robj}
                                 ce=ce+1
                             end
-                            if tl == "label" then
+                            if tl == "max_label" then
                                 local robj = Entity:extends{db=dbn,tbl=tn, type=1,sec_label=tonumber(tv)}
                                 proxy.global.t[tn]={db=dbn,max_label=tonumber(tv),obj=robj}
                             end
@@ -181,12 +176,11 @@ for k,v in pairs(lua_v) do
 
 end
 
-
-fr:close()
 print("Number of loaded users: "..cu.."\n")
 print("Number of loaded entities: "..ce.."\n")
 
 end
+
 
 function set_error(errmsg)
     proxy.response = {
@@ -195,15 +189,26 @@ function set_error(errmsg)
     }
 end
 
+
 function connect_server()
+
+json = require('json')
+local fer = io.open("ent.json","rb")
+ent_json_raw = fer:read("*all")
+fer:close()
+lua_v = json.decode(ent_json_raw)
 
 local LCS = require 'LCS'
 
-Entity = LCS.class.abstract {access_type = nil, access_to=nil, sec_label=nil}
+Entity = LCS.class.abstract{sec_label=nil}
 
-function Entity:init(dbn,slbl)
-self.db = dbn
+
+function Entity:init(slbl,user)
 self.sec_label = slbl
+self.user=user
+self.db = nil
+self.tbl = nil
+self.clmn = nil
 end
 
 function Entity:describe()
@@ -249,8 +254,9 @@ if not proxy.global.u then
     proxy.global.priv={}
     init_sec_labels()
     set_max_label()
+    --init_users_test()
     load_dte_policy()
-    end
+end
 
 end
 
