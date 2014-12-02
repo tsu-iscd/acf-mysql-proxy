@@ -1,4 +1,0 @@
-test:3
-test:asd:4
-test:qwe:10
-test:asd:str:4
