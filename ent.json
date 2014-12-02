@@ -1,4 +1,7 @@
 {
+    "users": { 
+               "root": "4",
+             },
     "dbs":{
         "test": { "label":"3", "max_label":"5", 
             "tables": {

@@ -124,59 +124,67 @@ end
 function init_sec_labels ()
 
 print("Initialization of security labels\n")
-local fr = io.open("users.txt","r")
+local json = require("json")
+local fr = io.open("ent.json","r")
+local raw_json = fr:read("*all")
+local lua_v = json.decode(raw_json)
 
-c=0
-for line in fr:lines() do
-    for k, v in string.gmatch(line,"(%w+):(%d+)") do
-            local subj = Entity:extends{user=k,sec_label=tonumber(v)}
-            proxy.global.u[k]={label=tonumber(v),obj=subj}
+
+for k,v in pairs(lua_v) do
+    cu = 0
+    if k == "users" then
+        for u,l in pairs(v) do
+            local subj = Entity:extends{user=u,sec_label=tonumber(l)}
+            proxy.global.u[u]={label=tonumber(l),obj=subj}
+            cu=cu+1
+        end
     end
-c=c+1
+
+    ce=0
+    if k == "dbs" then
+        for dbn,at in pairs(v) do
+            for n,l in pairs(at) do
+                if n=="label" then
+                    local robj = Entity:extends{db=dbn,type=0,sec_label=tonumber(l)}
+                    proxy.global.db[dbn]={label=tonumber(l),obj=robj}
+                    ce=ce+1
+                end
+                if n=="max_label" then
+                    local robj = Entity:extends{db=dbn,type=0,sec_label=tonumber(l)}
+                    proxy.global.db[dbn]={max_label=tonumber(l),obj=robj}
+                end
+                if n=="tables" then
+                    for tn,tat in pairs(l) do
+                        for tl,tv in pairs(tat) do
+                            if tl == "label" then
+                                local robj = Entity:extends{db=dbn,tbl=tn, type=1,sec_label=tonumber(tv)}
+                                proxy.global.t[tn]={db=dbn,label=tonumber(tv),obj=robj}
+                                ce=ce+1
+                            end
+                            if tl == "label" then
+                                local robj = Entity:extends{db=dbn,tbl=tn, type=1,sec_label=tonumber(tv)}
+                                proxy.global.t[tn]={db=dbn,max_label=tonumber(tv),obj=robj}
+                            end
+                            if tl == "columns" then
+                                for cn,cv in pairs(tv) do
+                                    local robj = Entity:extends{db=dbn,tbl=tn,clmn=cn, type=2,sec_label=tonumber(cv)}
+                                    proxy.global.c[cn]={db=dbn,table=tn,label=tonumber(cv),obj=robj}
+                                    ce=ce+1
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+
 end
+
 
 fr:close()
-print("Number of loaded users: "..c.."\n")
-
-local fre= io.open("ent.txt","r")
-
-c=0
-le=false
-for line in fre:lines() do
-le=false
-print(line)
-    
-    -- Loading DB, Table, column names and sec_labels
-    for dbn,tn,cn,v in string.gmatch(line,"(.+):(.+):(.+):(%d+)") do
-        local robj = Entity:extends{db=dbn,tbl=tn,clmn=cn, type=2,sec_label=tonumber(v)}
-        proxy.global.c[cn]={db=dbn,table=tn,label=tonumber(v),obj=robj}
-        c=c+1
-        le=true
-    end
-
-    if le==false then
-        -- Loading DB,Table names and sec_labels
-        for dbn,tn,v in string.gmatch(line,"(.+):(.+):(%d+)") do
-           local robj = Entity:extends{db=dbn,tbl=tn, type=1,sec_label=tonumber(v)}
-           proxy.global.t[tn]={db=dbn,label=tonumber(v),obj=robj}
-           c=c+1
-           le=true
-        end
-    end
-
-    if le==false then
-        -- Loading DB names and sec_labels
-        for dbn,v in string.gmatch(line,"(.+):(%d+)") do
-            local robj = Entity:extends{db=dbn,type=0,sec_label=tonumber(v)}
-            proxy.global.db[dbn]={label=tonumber(v),obj=robj}
-            c=c+1
-        end
-    end
-end
-
-fre:close()
-
-print("Number of loaded entities: "..c.."\n")
+print("Number of loaded users: "..cu.."\n")
+print("Number of loaded entities: "..ce.."\n")
 
 end
 
