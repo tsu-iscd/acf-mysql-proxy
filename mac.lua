@@ -140,7 +140,7 @@ for k,v in pairs(lua_v) do
     if k == "users" then
         for un, l in pairs(v) do
             local subj = Entity:extends{user=un,sec_label=tonumber(l)}
-            proxy.global.u[un]={label=l,obj=subj}
+            proxy.global.u[un]={label=tonumber(l),obj=subj}
             cu=cu+1
         end
     end
@@ -284,6 +284,19 @@ function user_sec_label()
 
 return -1
 end
+
+--Returns security label (number) of the user
+function user_sec_label_num()
+
+    for k,v in pairs(proxy.global.u) do
+        if k == proxy.connection.client.username then
+            return v['label']
+        end
+    end
+
+return -1
+end
+
 
 --Returns the array of column names. Args: db name and table name.
 function columns_arr(dbn,tabn)
@@ -824,6 +837,37 @@ return res
 end
 
 
+function create_check_access(tokens)
+local max_tokens = #tokens
+local tok=1
+local res = true
+local file_name = ''
+local db_name = ''
+local table_name = ''
+
+if max_tokens < 3 then
+    return res
+end
+
+while tok < max_tokens do
+    tok=tok+1
+    if tokens[tok]["token_name"] == "TK_SQL_DATABASE" then
+        while tok < max_tokens and tokens[tok]["token_name"] ~= "TK_LITERAL" do
+            tok = tok+1
+        end
+        if tokens[tok]["token_name"] ~= "TK_LITERAL" then
+            return res
+        end
+        local lbl = user_sec_label_num()
+        local tmp_lbl = {label=lbl,max_label=lbl,tables={}}
+        lua_v["dbs"][tokens[tok]["text"]]=tmp_lbl
+        --save_policy()
+        print("Database "..tokens[tok]["text"].." is created with label "..lbl.."\n")
+    end
+end
+
+return res
+end
 
 function read_query( packet )
 	if packet:byte() == proxy.COM_QUERY then
@@ -852,6 +896,8 @@ function read_query( packet )
             if tokens[tok].text:upper() == "HANDLER" then
                 res = handler_check_access(tokens)
             end
+        elseif tokens[tok]['token_name'] == "TK_SQL_CREATE" then
+            res = create_check_access(tokens)
         end
 
         if res == true then
