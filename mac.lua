@@ -263,7 +263,6 @@ if not proxy.global.u then
     proxy.global.priv={}
     init_sec_labels()
     set_max_label()
-    save_policy()
     load_dte_policy()
 end
 
