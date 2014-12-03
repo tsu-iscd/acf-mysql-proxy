@@ -118,6 +118,15 @@ res={}
     end
 end
 
+-- Save policy to ent.json file
+function save_policy()
+print(json.encode(lua_v))
+local fer = io.open("ent.json","w")
+fer:write(json.encode(lua_v))
+fer:close()
+
+end
+
 --Loading user and entities names and security labels (sec_labels) from the file
 function init_sec_labels()
 
@@ -131,7 +140,7 @@ for k,v in pairs(lua_v) do
     if k == "users" then
         for un, l in pairs(v) do
             local subj = Entity:extends{user=un,sec_label=tonumber(l)}
-            proxy.global.u[un]={label=tonumber(l),obj=subj}
+            proxy.global.u[un]={label=l,obj=subj}
             cu=cu+1
         end
     end
@@ -254,7 +263,7 @@ if not proxy.global.u then
     proxy.global.priv={}
     init_sec_labels()
     set_max_label()
-    --init_users_test()
+    save_policy()
     load_dte_policy()
 end
 
