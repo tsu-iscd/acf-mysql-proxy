@@ -44,25 +44,23 @@ function read_query( packet )
             end
             tok = tok+1
         end
-        proxy.queries:append(1,packet,{resultset_is_needed = true})
+        --print(proxy.connection.server.thread_id)
+        proxy.queries:append(proxy.connection.server.thread_id,packet,{resultset_is_needed = true})
         return proxy.PROXY_SEND_QUERY
     end
 end
 
 function read_query_result(inj)
     local res = assert(inj.resultset)
-    --for row in inj.resultset.rows do
-    --    print("Query  returned: "..row[1])
-    --end
-   
-   print(res)
+    
+    print(res)
     
     if inj.resultset.query_status == proxy.MYSQLD_PACKET_OK then
         print("OK")
     else
         print("ERR")
     end 
-    return proxy.PROXY_SEND_RESULT
+    -- return proxy.PROXY_SEND_RESULT
 
 end
 
