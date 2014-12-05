@@ -860,12 +860,12 @@ while tok < max_tokens do
             return res
         end
         local lbl = user_sec_label_num()
-        --local tmp_lbl = {label=lbl,max_label=lbl,tables={}}
-        --lua_v["dbs"][tokens[tok]["text"]]=tmp_lbl
-        --save_policy()
-        proxy.global.tmp[proxy.connection.server.thread_id]=tokens[tok]["text"]
+        local dbn = tokens[tok]["text"]
+        proxy.global.tmp[proxy.connection.server.thread_id]=dbn
+        local robj = Entity:extends{db=dbn,type=0,sec_label=lbl}
+        proxy.global.db[dbn]={label=lbl,obj=robj}
         res = false
-        --print("Database "..tokens[tok]["text"].." can be created with label "..lbl.."\n")
+        print("Database "..tokens[tok]["text"].." can be created with label "..lbl.."\n")
     end
 end
 
