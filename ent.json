@@ -1,12 +1,1 @@
-{
-    "users":{"root": "4"},
-    "dbs":{
-        "test": { "label":"3", "max_label":"5", 
-            "tables": {
-                "asd": {"label":"4","max_label":"5","columns":{"str":"5"}}, 
-                "qwe": {"label":"4","max_label":"4","columns":{}}
-                      } 
-                }
-          }
-
-}
+{"users":{"root":"4"},"dbs":{"test":{"tables":{"asd":{"max_label":"5","columns":{"str":"5"},"label":"4"},"qwe":{"max_label":"4","columns":{},"label":"4"}},"max_label":"5","label":"3"},"ppp":{"tables":{},"max_label":4,"label":4}}}

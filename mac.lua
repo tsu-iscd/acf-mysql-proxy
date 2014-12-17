@@ -261,6 +261,7 @@ if not proxy.global.u then
     proxy.global.domain={}
     proxy.global.type={}
     proxy.global.priv={}
+    proxy.global.tmp={}
     init_sec_labels()
     set_max_label()
     load_dte_policy()
@@ -859,10 +860,12 @@ while tok < max_tokens do
             return res
         end
         local lbl = user_sec_label_num()
-        local tmp_lbl = {label=lbl,max_label=lbl,tables={}}
-        lua_v["dbs"][tokens[tok]["text"]]=tmp_lbl
-        --save_policy()
-        print("Database "..tokens[tok]["text"].." is created with label "..lbl.."\n")
+        local dbn = tokens[tok]["text"]
+        proxy.global.tmp[proxy.connection.server.thread_id]=dbn
+        local robj = Entity:extends{db=dbn,type=0,sec_label=lbl}
+        proxy.global.db[dbn]={label=lbl,obj=robj}
+        res = false
+        print("Database "..tokens[tok]["text"].." can be created with label "..lbl.."\n")
     end
 end
 
@@ -898,6 +901,10 @@ function read_query( packet )
             end
         elseif tokens[tok]['token_name'] == "TK_SQL_CREATE" then
             res = create_check_access(tokens)
+            if res == false then
+                proxy.queries:append(proxy.connection.server.thread_id,packet,{resultset_is_needed = true})
+                return proxy.PROXY_SEND_QUERY
+            end
         end
 
         if res == true then
@@ -905,5 +912,24 @@ function read_query( packet )
             return proxy.PROXY_SEND_RESULT
         end
     end
+end
+
+
+
+function read_query_result(inj)
+    if inj.id == proxy.connection.server.thread_id then
+        local res = assert(inj.resultset)
+        if inj.resultset.query_status == proxy.MYSQLD_PACKET_OK then
+            local lbl = user_sec_label_num()
+            local tmp_lbl = {label=lbl,max_label=lbl,tables={}}
+            lua_v["dbs"][proxy.global.tmp[proxy.connection.server.thread_id]]=tmp_lbl
+            save_policy()
+            proxy.global.tmp[proxy.connection.server.thread_id] = nil
+            print("OK. New policy is saved.")
+        else
+            print("DB can't be created")
+        end
+    end
+    
 end
 
