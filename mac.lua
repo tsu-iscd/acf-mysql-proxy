@@ -852,7 +852,7 @@ end
 
 while tok < max_tokens do
     tok=tok+1
-    if tokens[tok]["token_name"] == "TK_SQL_DATABASE" then
+    if tokens[tok]["token_name"] == "TK_SQL_DATABASE" or tokens[tok]['token_name'] == "TK_SQL_SCHEMA" then
         while tok < max_tokens and tokens[tok]["token_name"] ~= "TK_LITERAL" do
             tok = tok+1
         end
@@ -900,10 +900,12 @@ function read_query( packet )
                 res = handler_check_access(tokens)
             end
         elseif tokens[tok]['token_name'] == "TK_SQL_CREATE" then
-            res = create_check_access(tokens)
-            if res == false then
-                proxy.queries:append(proxy.connection.server.thread_id,packet,{resultset_is_needed = true})
-                return proxy.PROXY_SEND_QUERY
+            if tokens[tok+1]['token_name'] == "TK_SQL_DATABASE" or tokens[tok+1]['token_name'] == "TK_SQL_SCHEMA" then
+                res = create_check_access(tokens)
+                if res == false then
+                    proxy.queries:append(proxy.connection.server.thread_id,packet,{resultset_is_needed = true})
+                    return proxy.PROXY_SEND_QUERY
+                end
             end
         end
 
