@@ -1,4 +1,5 @@
 
+package.cpath = package.cpath .. ";/usr/lib/i386-linux-gnu/lua/5.1/?.so"
 
 function comment_tokenizer(tok_text)
 
@@ -37,8 +38,28 @@ function read_query( packet )
         end
         --print("Toks: "..toks.."\n")
         while tok <= #tokens do
+            
             if tokens[tok]['token_name'] == 'TK_COMMENT' then
-                comment_tokenizer(tokens[tok]['text'])
+                print("begin")
+                local driver = require "luasql.mysql"
+                local env = assert(driver.mysql())
+                local con = assert(env:connect("test","root","asd123"))
+                print(env,con)
+                --for id, str in rows(con, "select * from asd") do
+                --    print (string.format ("%s: %s", id, str))
+                --end
+                cur,err = con:execute([[select * from asd]])
+                
+                row = cur:fetch ({}, "a")
+                while row do
+                    print(string.format("Name: %s %s", row.id,row.str))
+                    row = cur:fetch (row, "a")
+                end
+                cur:close()
+                con:close()
+                env:close()
+                print("end")
+                -- comment_tokenizer(tokens[tok]['text'])
             else
                 print(tokens[tok]['token_name'].." : "..tokens[tok]['text'].."\n")
             end
@@ -55,14 +76,14 @@ function read_query_result(inj)
     --    print("Query  returned: "..row[1])
     --end
    
-   print(res)
+   --print(res)
     
     if inj.resultset.query_status == proxy.MYSQLD_PACKET_OK then
         print("OK")
     else
         print("ERR")
     end 
-    return proxy.PROXY_SEND_RESULT
+    --return proxy.PROXY_SEND_RESULT
 
 end
 
