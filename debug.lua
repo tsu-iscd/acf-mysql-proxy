@@ -1,6 +1,7 @@
 
 package.cpath = package.cpath .. ";/usr/lib/i386-linux-gnu/lua/5.1/?.so"
 
+
 function comment_tokenizer(tok_text)
 
 local ctk = require('proxy.tokenizer')
@@ -48,11 +49,11 @@ function read_query( packet )
                 --for id, str in rows(con, "select * from asd") do
                 --    print (string.format ("%s: %s", id, str))
                 --end
-                cur,err = con:execute([[select * from asd]])
+                cur,err = con:execute([[show databases]])
                 
                 row = cur:fetch ({}, "a")
                 while row do
-                    print(string.format("Name: %s %s", row.id,row.str))
+                    print(string.format("Name: %s", row.Database))
                     row = cur:fetch (row, "a")
                 end
                 cur:close()

@@ -1,3 +1,38 @@
+
+-- Recieve all MySQL dbs/tables structure using root credentials
+function init_sql()
+
+package.cpath = package.cpath .. ";/usr/lib/i386-linux-gnu/lua/5.1/?.so"
+
+local driver = require "luasql.mysql"
+local env = assert(driver.mysql())
+local con = assert(env:connect("test","root","asd123"))
+
+cur,err = con:execute([[show databases]])
+
+row = cur:fetch ({}, "a")
+while row do
+    print(string.format("Databases: %s", row.Database))
+    proxy.global.mysql[row.Database]={tables={}}
+    row = cur:fetch (row, "a")
+end
+cur:close()
+
+cur, err = con:execute([[select TABLE_NAME as tbn,TABLE_SCHEMA as dbn from information_schema.tables where table_schema!="performance_schema" and table_schema!="information_schema" and table_schema!="mysql"]])
+
+row = cur:fetch ({}, "a")
+while row do
+    print(string.format("Tables(%s): %s", row.dbn,row.tbn))
+    proxy.global.mysql[row.dbn]["tables"][row.tbn]={}
+    row = cur:fetch (row, "a")
+end
+cur:close()
+con:close()
+env:close()
+
+end
+
+
 --Load DTE policy (domains, types and privileges).
 function load_dte_policy()
 local te =  io.open("dte.json","r")
@@ -34,48 +69,46 @@ end
 --Set max_label parameter to each entity arrays (db,t,c)
 function set_max_label()
 
-max_label=0
+--local max_label_tmp=0
     for kt,vt in pairs(proxy.global.t) do
-        max_label = vt['label']
+        local max_label_tmp = vt['label']
+        print(vt['label'])
+        print(max_label_tmp)
 
         for kc,vc in pairs(proxy.global.c) do
 
-            if vc['db'] == vt['db'] and kt == vc['table'] and max_label<vc['label'] then
-
-               max_label=vc['label']
-
+            if vc['db'] == vt['db'] and kt == vc['table'] and max_label_tmp<vc['label'] then
+                max_label_tmp=vc['label']
+                print(max_label_tmp)
             end
 
         end
 
         
-        vt['max_label']=max_label
-        local robj = Entity:extends{db=vt['db'],tbl=kt, type=1,sec_label=max_label}
-        vt['max_label_obj'] = robj
-        print('T: '..kt..' Max_label: '..max_label..'\n')
+        vt['max_label']=max_label_tmp
+        print('T: '..kt..' Max_label: '..max_label_tmp..'\n')
 
     end
 
     for kd,vd in pairs(proxy.global.db) do
 
-        max_label=vd['label']
+        local max_label_tmp=vd['label']
 
         for kt,vt in pairs(proxy.global.t) do
         
-            if kd == vt['db'] and max_label<vt['max_label'] then
+            if kd == vt['db'] and max_label_tmp<vt['max_label'] then
 
-                max_label=vt['max_label']
+                max_label_tmp=vt['max_label']
 
             end
 
         end
 
-        local robj = Entity:extends{db=kd, type=0,sec_label=max_label}
-        vd['max_label']=max_label
-        vd['max_label_obj']=robj
-        print('DB: '..kd..' Max_label: '..max_label..'\n')
+        vd['max_label']=max_label_tmp
+        print('DB: '..kd..' Max_label: '..max_label_tmp..'\n')
 
     end
+
 end
 
 --Insert into array only unique elements
@@ -139,8 +172,7 @@ local ce = 0
 for k,v in pairs(lua_v) do
     if k == "users" then
         for un, l in pairs(v) do
-            local subj = Entity:extends{user=un,sec_label=tonumber(l)}
-            proxy.global.u[un]={label=tonumber(l),obj=subj}
+            proxy.global.u[un]={label=tonumber(l)}
             cu=cu+1
         end
     end
@@ -149,30 +181,25 @@ for k,v in pairs(lua_v) do
         for dbn,at in pairs(v) do
             for n,l in pairs(at) do
                 if n=="label" then
-                    local robj = Entity:extends{db=dbn,type=0,sec_label=tonumber(l)}
-                    proxy.global.db[dbn]={label=tonumber(l),obj=robj}
+                    proxy.global.db[dbn]={label=tonumber(l),max_label=-1}
                     ce=ce+1
                 end
                 if n=="max_label" then
-                    local robj = Entity:extends{db=dbn,type=0,sec_label=tonumber(l)}
-                    proxy.global.db[dbn]={max_label=tonumber(l),obj=robj}
+                    proxy.global.db[dbn]['max_label']=tonumber(l)
                 end
                 if n=="tables" then
                     for tn,tat in pairs(l) do
                         for tl,tv in pairs(tat) do
                             if tl == "label" then
-                                local robj = Entity:extends{db=dbn,tbl=tn, type=1,sec_label=tonumber(tv)}
-                                proxy.global.t[tn]={db=dbn,label=tonumber(tv),obj=robj}
+                                proxy.global.t[tn]={db=dbn,label=tonumber(tv),max_label=-1}
                                 ce=ce+1
                             end
                             if tl == "max_label" then
-                                local robj = Entity:extends{db=dbn,tbl=tn, type=1,sec_label=tonumber(tv)}
-                                proxy.global.t[tn]={db=dbn,max_label=tonumber(tv),obj=robj}
+                                proxy.global.t[tn]['max_label']=tonumber(tv)
                             end
                             if tl == "columns" then
                                 for cn,cv in pairs(tv) do
-                                    local robj = Entity:extends{db=dbn,tbl=tn,clmn=cn, type=2,sec_label=tonumber(cv)}
-                                    proxy.global.c[cn]={db=dbn,table=tn,label=tonumber(cv),obj=robj}
+                                    proxy.global.c[cn]={db=dbn,table=tn,label=tonumber(cv)}
                                     ce=ce+1
                                 end
                             end
@@ -207,51 +234,6 @@ ent_json_raw = fer:read("*all")
 fer:close()
 lua_v = json.decode(ent_json_raw)
 
-local LCS = require 'LCS'
-
-Entity = LCS.class.abstract{sec_label=nil}
-
-
-function Entity:init(slbl,user)
-self.sec_label = slbl
-self.user=user
-self.db = nil
-self.tbl = nil
-self.clmn = nil
-end
-
-function Entity:describe()
-    if self.user ~= nil then
-        return self.user
-    elseif self.db ~= nil then
-        return self.db
-    elseif self.tbl ~= nil then
-        return self.tbl
-    elseif self.clmn ~= nil then
-        return self.clmn
-    end
-    return 'Nil'
-end
-
-Entity.__eq = function (o,t)
-    return o.sec_label == t.sec_label
-end
-
-Entity.__lt = function (o,t)
-    return o.sec_label < t.sec_label
-end
-
-Entity.__le = function (o,t)
-    return o.sec_label <= t.sec_label
-end
-
-Entity.__gt = function (o,t)
-    return o.sec_label > t.sec_label
-end
-
-Entity.__ge = function (o,t)
-    return o.sec_label >= t.sec_label
-end
 
 if not proxy.global.u then
     proxy.global.u={}
@@ -262,9 +244,11 @@ if not proxy.global.u then
     proxy.global.type={}
     proxy.global.priv={}
     proxy.global.tmp={}
+    proxy.global.mysql={}
     init_sec_labels()
     set_max_label()
     load_dte_policy()
+    init_sql()
 end
 
 end
@@ -276,18 +260,6 @@ end
 
 --Returns security label of the user
 function user_sec_label()
-
-    for k,v in pairs(proxy.global.u) do
-        if k == proxy.connection.client.username then
-            return v['obj']
-        end
-    end
-
-return -1
-end
-
---Returns security label (number) of the user
-function user_sec_label_num()
 
     for k,v in pairs(proxy.global.u) do
         if k == proxy.connection.client.username then
@@ -319,7 +291,7 @@ function ent_sec_label(max,type,db_n,t_n,c_n)
     if type==2 then
         for k,v in pairs(proxy.global.c) do
             if k == c_n and v['db']==db_n and v['table']==t_n then
-                return v['obj']
+                return v['label']
             end
         end
     end
@@ -328,10 +300,9 @@ function ent_sec_label(max,type,db_n,t_n,c_n)
         for k,v in pairs(proxy.global.t) do
             if k == t_n and v['db']==db_n then
                 if max==true then
-                    --local robj = Entity:extends{db=v['db'],tbl=k, type=1,sec_label=v['max_label']}
-                    return v['max_label_obj']
+                    return v['max_label']
                 end
-                return v['obj']
+                return v['label']
             end
         end
     end
@@ -340,10 +311,9 @@ function ent_sec_label(max,type,db_n,t_n,c_n)
         for k,v in pairs(proxy.global.db) do
             if k == db_n then
                 if max==true then
-                    --local robj = Entity:extends{db=k, type=0,sec_label=v['max_label']}
-                    return v['max_label_obj']
+                    return v['max_label']
                 end
-                return v['obj']
+                return v['label']
             end
         end
     end
@@ -422,7 +392,7 @@ while tok <= max_tokens do
 
 
             ul = user_sec_label()
-            print("Lables u="..ul.sec_label.." e="..el.sec_label.."\n")
+            print("Lables u="..ul.." e="..el.."\n")
             
             return tok+1,access_write(ul,el,false)    
         else
@@ -541,7 +511,7 @@ for t=1,#sq do
             if fl==true then
                 find=true
                 local el=ent_sec_label(true,2,db,tab,c)
-                print("User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
+                print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
                 res=access_read(ul,el)
                 if res == true then
                     return res
@@ -550,7 +520,7 @@ for t=1,#sq do
         end
         if find==false then 
             local el=ent_sec_label(false,1,db,tab)
-            print("User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
+            print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
             res = access_read(ul,el)
             if res == true then
                 return res
@@ -583,7 +553,7 @@ for t=1,#sq do
                 find=true
                 local el=ent_sec_label(true,2,db,tab,c)
                 if #sq>1 and w_obj_l==0 and t == 1 then
-                    print("User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
+                    print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
                     res=access_append(ul,el,false)
                     w_obj_l=el
                 elseif #sq == 1 then
@@ -599,7 +569,7 @@ for t=1,#sq do
         if find==false then 
             local el=ent_sec_label(false,1,db,tab)
             if #sq>1 and w_obj_l==0 and t == 1 then
-                print("No columns. User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
+                print("No columns. User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
                 res = access_append(ul,el,false)
                 w_obj_l = el
             elseif #sq == 1 then
@@ -641,7 +611,7 @@ for t=1,#sq do
                 find=true
                 local el=ent_sec_label(true,2,db,tab,c)
                 if #sq>1 and w_obj_l==0 and t == 1 then
-                    print("User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
+                    print("User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
                     res=access_write(ul,el,false)
                     w_obj_l=el
                 elseif #sq == 1 then
@@ -657,7 +627,7 @@ for t=1,#sq do
         if find==false then 
             local el=ent_sec_label(false,1,db,tab)
             if #sq>1 and w_obj_l==0 and t == 1 then
-                print("No columns. User_label = "..ul.sec_label.."\nEnt_label = "..el.sec_label.."\nDB = "..db.." Table = "..tab)
+                print("No columns. User_label = "..ul.."\nEnt_label = "..el.."\nDB = "..db.." Table = "..tab)
                 res = access_write(ul,el,false)
                 w_obj_l = el
             elseif #sq == 1 then
@@ -859,11 +829,11 @@ while tok < max_tokens do
         if tokens[tok]["token_name"] ~= "TK_LITERAL" then
             return res
         end
-        local lbl = user_sec_label_num()
+        local lbl = user_sec_label()
         local dbn = tokens[tok]["text"]
         proxy.global.tmp[proxy.connection.server.thread_id]=dbn
-        local robj = Entity:extends{db=dbn,type=0,sec_label=lbl}
-        proxy.global.db[dbn]={label=lbl,obj=robj}
+        --local robj = Entity:extends{db=dbn,type=0,sec_label=lbl}
+        proxy.global.db[dbn]={label=lbl}
         res = false
         print("Database "..tokens[tok]["text"].." can be created with label "..lbl.."\n")
     end
@@ -922,7 +892,7 @@ function read_query_result(inj)
     if inj.id == proxy.connection.server.thread_id then
         local res = assert(inj.resultset)
         if inj.resultset.query_status == proxy.MYSQLD_PACKET_OK then
-            local lbl = user_sec_label_num()
+            local lbl = user_sec_label()
             local tmp_lbl = {label=lbl,max_label=lbl,tables={}}
             lua_v["dbs"][proxy.global.tmp[proxy.connection.server.thread_id]]=tmp_lbl
             save_policy()

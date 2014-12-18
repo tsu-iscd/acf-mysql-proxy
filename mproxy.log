@@ -1,1 +1,56 @@
 
+2014-12-18 21:45:48: (debug) chassis-path.c.122: adjusting relative path (mac.lua) to base_dir (/home/afr1ka/acf/acf-mysql-proxy). New path: /home/afr1ka/acf/acf-mysql-proxy/mac.lua
+2014-12-18 21:45:48: (critical) plugin proxy 0.8.3 started
+2014-12-18 21:45:48: (debug) max open file-descriptors = 1024
+2014-12-18 21:45:48: (message) proxy listening on port 127.0.0.1:4406
+2014-12-18 21:45:48: (message) added read/write backend: 127.0.0.1:3306
+2014-12-18 21:45:51: (critical) proxy-plugin.c:1559: (connect_server) [string "/home/afr1ka/acf/acf-mysql-proxy/mac.lua"]:79: attempt to compare nil with number
+2014-12-18 21:45:54: (message) Initiating shutdown, requested from signal handler
+2014-12-18 21:45:54: (message) shutting down normally, exit code is: 0
+2014-12-18 22:53:55: (debug) chassis-path.c.122: adjusting relative path (mac.lua) to base_dir (/home/afr1ka/acf/acf-mysql-proxy). New path: /home/afr1ka/acf/acf-mysql-proxy/mac.lua
+2014-12-18 22:53:55: (critical) plugin proxy 0.8.3 started
+2014-12-18 22:53:55: (debug) max open file-descriptors = 1024
+2014-12-18 22:53:55: (message) proxy listening on port 127.0.0.1:4406
+2014-12-18 22:53:55: (message) added read/write backend: 127.0.0.1:3306
+2014-12-18 22:53:59: (critical) proxy-plugin.c:1559: (connect_server) [string "/home/afr1ka/acf/acf-mysql-proxy/mac.lua"]:79: attempt to compare nil with number
+2014-12-18 22:54:03: (message) Initiating shutdown, requested from signal handler
+2014-12-18 22:54:04: (message) shutting down normally, exit code is: 0
+2014-12-18 22:58:26: (debug) chassis-path.c.122: adjusting relative path (mac.lua) to base_dir (/home/afr1ka/acf/acf-mysql-proxy). New path: /home/afr1ka/acf/acf-mysql-proxy/mac.lua
+2014-12-18 22:58:26: (critical) plugin proxy 0.8.3 started
+2014-12-18 22:58:26: (debug) max open file-descriptors = 1024
+2014-12-18 22:58:26: (message) proxy listening on port 127.0.0.1:4406
+2014-12-18 22:58:26: (message) added read/write backend: 127.0.0.1:3306
+2014-12-18 22:58:31: (critical) proxy-plugin.c:1559: (connect_server) [string "/home/afr1ka/acf/acf-mysql-proxy/mac.lua"]:80: attempt to compare nil with number
+2014-12-18 23:41:24: (message) Initiating shutdown, requested from signal handler
+2014-12-18 23:41:25: (message) shutting down normally, exit code is: 0
+2014-12-19 00:04:51: (debug) chassis-path.c.122: adjusting relative path (mac.lua) to base_dir (/home/afr1ka/acf/acf-mysql-proxy). New path: /home/afr1ka/acf/acf-mysql-proxy/mac.lua
+2014-12-19 00:04:51: (critical) plugin proxy 0.8.3 started
+2014-12-19 00:04:51: (debug) max open file-descriptors = 1024
+2014-12-19 00:04:51: (message) proxy listening on port 127.0.0.1:4406
+2014-12-19 00:04:51: (message) added read/write backend: 127.0.0.1:3306
+2014-12-19 00:04:56: (critical) proxy-plugin.c:1559: (connect_server) [string "/home/afr1ka/acf/acf-mysql-proxy/mac.lua"]:80: attempt to compare nil with number
+2014-12-19 00:05:00: (message) Initiating shutdown, requested from signal handler
+2014-12-19 00:05:00: (message) shutting down normally, exit code is: 0
+2014-12-19 00:05:32: (debug) chassis-path.c.122: adjusting relative path (mac.lua) to base_dir (/home/afr1ka/acf/acf-mysql-proxy). New path: /home/afr1ka/acf/acf-mysql-proxy/mac.lua
+2014-12-19 00:05:32: (critical) plugin proxy 0.8.3 started
+2014-12-19 00:05:32: (debug) max open file-descriptors = 1024
+2014-12-19 00:05:32: (message) proxy listening on port 127.0.0.1:4406
+2014-12-19 00:05:32: (message) added read/write backend: 127.0.0.1:3306
+2014-12-19 00:05:37: (critical) proxy-plugin.c:1559: (connect_server) [string "/home/afr1ka/acf/acf-mysql-proxy/mac.lua"]:79: attempt to compare nil with number
+2014-12-19 00:06:38: (message) Initiating shutdown, requested from signal handler
+2014-12-19 00:06:39: (message) shutting down normally, exit code is: 0
+2014-12-19 00:07:31: (debug) chassis-path.c.122: adjusting relative path (mac.lua) to base_dir (/home/afr1ka/acf/acf-mysql-proxy). New path: /home/afr1ka/acf/acf-mysql-proxy/mac.lua
+2014-12-19 00:07:31: (critical) plugin proxy 0.8.3 started
+2014-12-19 00:07:31: (debug) max open file-descriptors = 1024
+2014-12-19 00:07:31: (message) proxy listening on port 127.0.0.1:4406
+2014-12-19 00:07:31: (message) added read/write backend: 127.0.0.1:3306
+2014-12-19 00:07:38: (critical) proxy-plugin.c:1559: (connect_server) [string "/home/afr1ka/acf/acf-mysql-proxy/mac.lua"]:80: attempt to compare nil with number
+2014-12-19 00:07:41: (message) Initiating shutdown, requested from signal handler
+2014-12-19 00:07:41: (message) shutting down normally, exit code is: 0
+2014-12-19 00:24:22: (debug) chassis-path.c.122: adjusting relative path (mac.lua) to base_dir (/home/afr1ka/acf/acf-mysql-proxy). New path: /home/afr1ka/acf/acf-mysql-proxy/mac.lua
+2014-12-19 00:24:22: (critical) plugin proxy 0.8.3 started
+2014-12-19 00:24:22: (debug) max open file-descriptors = 1024
+2014-12-19 00:24:22: (message) proxy listening on port 127.0.0.1:4406
+2014-12-19 00:24:22: (message) added read/write backend: 127.0.0.1:3306
+2014-12-19 00:37:21: (message) Initiating shutdown, requested from signal handler
+2014-12-19 00:37:21: (message) shutting down normally, exit code is: 0
