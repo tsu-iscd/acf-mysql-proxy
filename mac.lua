@@ -12,7 +12,7 @@ cur,err = con:execute([[show databases]])
 
 row = cur:fetch ({}, "a")
 while row do
-    print(string.format("Databases: %s", row.Database))
+--    print(string.format("Databases: %s", row.Database))
     proxy.global.mysql[row.Database]={tables={}}
     row = cur:fetch (row, "a")
 end
@@ -22,7 +22,7 @@ cur, err = con:execute([[select TABLE_NAME as tbn,TABLE_SCHEMA as dbn from infor
 
 row = cur:fetch ({}, "a")
 while row do
-    print(string.format("Tables(%s): %s", row.dbn,row.tbn))
+--    print(string.format("Tables(%s): %s", row.dbn,row.tbn))
     proxy.global.mysql[row.dbn]["tables"][row.tbn]={}
     row = cur:fetch (row, "a")
 end
@@ -69,11 +69,8 @@ end
 --Set max_label parameter to each entity arrays (db,t,c)
 function set_max_label()
 
---local max_label_tmp=0
     for kt,vt in pairs(proxy.global.t) do
         local max_label_tmp = vt['label']
-        print(vt['label'])
-        print(max_label_tmp)
 
         for kc,vc in pairs(proxy.global.c) do
 
@@ -439,7 +436,6 @@ function find_columns(tokens,dbn,tabn)
         print('Find_columns '..tokens[tok]['token_name'])
         if tokens[tok]['token_name']=='TK_LITERAL' then
             for i=1,#clms do
-               print(clms[i])
                if tokens[tok]['text'] == clms[i] then
                    res[clms[i]]=true
                end
@@ -831,9 +827,12 @@ while tok < max_tokens do
         end
         local lbl = user_sec_label()
         local dbn = tokens[tok]["text"]
-        proxy.global.tmp[proxy.connection.server.thread_id]=dbn
-        --local robj = Entity:extends{db=dbn,type=0,sec_label=lbl}
-        proxy.global.db[dbn]={label=lbl}
+        if proxy.global.mysql[dbn]==nil then
+            print(dbn)
+            proxy.global.tmp[proxy.connection.server.thread_id]=dbn
+            proxy.global.db[dbn]={label=lbl,max_label=lbl,tables={}}
+            proxy.global.mysql[dbn]={tables={}}
+        end
         res = false
         print("Database "..tokens[tok]["text"].." can be created with label "..lbl.."\n")
     end
@@ -875,6 +874,8 @@ function read_query( packet )
                 if res == false then
                     proxy.queries:append(proxy.connection.server.thread_id,packet,{resultset_is_needed = true})
                     return proxy.PROXY_SEND_QUERY
+                else 
+                    res = false
                 end
             end
         end
