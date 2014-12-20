@@ -176,9 +176,10 @@ for k,v in pairs(lua_v) do
 
     if k == "dbs" then
         for dbn,at in pairs(v) do
+            proxy.global.db[dbn]={}
             for n,l in pairs(at) do
                 if n=="label" then
-                    proxy.global.db[dbn]={label=tonumber(l),max_label=-1}
+                    proxy.global.db[dbn]["label"]=tonumber(l)
                     ce=ce+1
                 end
                 if n=="max_label" then
@@ -186,9 +187,10 @@ for k,v in pairs(lua_v) do
                 end
                 if n=="tables" then
                     for tn,tat in pairs(l) do
+                        proxy.global.t[tn]={}
                         for tl,tv in pairs(tat) do
                             if tl == "label" then
-                                proxy.global.t[tn]={db=dbn,label=tonumber(tv),max_label=-1}
+                                proxy.global.t[tn]={db=dbn,label=tonumber(tv)}
                                 ce=ce+1
                             end
                             if tl == "max_label" then
@@ -803,22 +805,29 @@ return res
 
 end
 
-
-function create_check_access(tokens)
+--Add label to the new DB entity. Or delete (in case of drop).
+function cd_db_check_access(tokens)
 local max_tokens = #tokens
 local tok=1
 local res = true
 local file_name = ''
 local db_name = ''
 local table_name = ''
+local isdrop=false
+local ifexists = false
 
 if max_tokens < 3 then
     return res
 end
 
+if tokens[tok]["token_name"] == "TK_SQL_DROP" then
+    isdrop=true
+end
+
+
 while tok < max_tokens do
     tok=tok+1
-    if tokens[tok]["token_name"] == "TK_SQL_DATABASE" or tokens[tok]['token_name'] == "TK_SQL_SCHEMA" then
+    if tokens[tok]["token_name"] == "TK_SQL_DATABASE" or tokens[tok]["token_name"] == "TK_SQL_SCHEMA" then
         while tok < max_tokens and tokens[tok]["token_name"] ~= "TK_LITERAL" do
             tok = tok+1
         end
@@ -827,12 +836,7 @@ while tok < max_tokens do
         end
         local lbl = user_sec_label()
         local dbn = tokens[tok]["text"]
-        if proxy.global.mysql[dbn]==nil then
-            print(dbn)
-            proxy.global.tmp[proxy.connection.server.thread_id]=dbn
-            proxy.global.db[dbn]={label=lbl,max_label=lbl,tables={}}
-            proxy.global.mysql[dbn]={tables={}}
-        end
+        proxy.global.tmp[proxy.connection.server.thread_id]={dbname=dbn,label=lbl,drop=isdrop}
         res = false
         print("Database "..tokens[tok]["text"].." can be created with label "..lbl.."\n")
     end
@@ -868,9 +872,9 @@ function read_query( packet )
             if tokens[tok].text:upper() == "HANDLER" then
                 res = handler_check_access(tokens)
             end
-        elseif tokens[tok]['token_name'] == "TK_SQL_CREATE" then
+        elseif tokens[tok]['token_name'] == "TK_SQL_CREATE" or tokens[tok]['token_name']=="TK_SQL_DROP" then
             if tokens[tok+1]['token_name'] == "TK_SQL_DATABASE" or tokens[tok+1]['token_name'] == "TK_SQL_SCHEMA" then
-                res = create_check_access(tokens)
+                res = cd_db_check_access(tokens)
                 if res == false then
                     proxy.queries:append(proxy.connection.server.thread_id,packet,{resultset_is_needed = true})
                     return proxy.PROXY_SEND_QUERY
@@ -893,15 +897,30 @@ function read_query_result(inj)
     if inj.id == proxy.connection.server.thread_id then
         local res = assert(inj.resultset)
         if inj.resultset.query_status == proxy.MYSQLD_PACKET_OK then
-            local lbl = user_sec_label()
-            local tmp_lbl = {label=lbl,max_label=lbl,tables={}}
-            lua_v["dbs"][proxy.global.tmp[proxy.connection.server.thread_id]]=tmp_lbl
-            save_policy()
-            proxy.global.tmp[proxy.connection.server.thread_id] = nil
-            print("OK. New policy is saved.")
+            
+            local tmp_proxy = proxy.global.tmp[proxy.connection.server.thread_id]
+            local dbn = tmp_proxy["dbname"]
+            local lbl = tostring(tmp_proxy["label"])
+
+            if tmp_proxy["drop"]== true then
+                proxy.global.db[dbn]=nil
+                proxy.global.mysql[dbn]=nil
+                lua_v["dbs"][dbn]=nil
+                save_policy()
+            else
+                if proxy.global.mysql[dbn] == nil then
+                    local tmp_policy = {label=lbl,max_label=lbl,tables={}}
+                    lua_v["dbs"][dbn]=tmp_policy
+                    proxy.global.db[dbn]=tmp_policy
+                    proxy.global.mysql[dbn]={tables={}}
+                    save_policy()
+                end
+            end
+            print("OK. Create/drop request execution is proceed")
         else
-            print("DB can't be created")
+            print("Error while creating/droping DB")
         end
+        proxy.global.tmp[proxy.connection.server.thread_id] = nil
     end
     
 end
